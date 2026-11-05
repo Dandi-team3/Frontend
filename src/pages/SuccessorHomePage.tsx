@@ -2,7 +2,6 @@ import { useNavigate } from 'react-router-dom';
 import Logo from '../components/Logo';
 import './SuccessorHomePage.css';
 
-/** 청년(물려받는 사람) 첫 화면 — 초기 설정만. 내용은 이후에 채움 */
 export default function SuccessorHomePage() {
   const navigate = useNavigate();
 
@@ -16,11 +15,19 @@ export default function SuccessorHomePage() {
         </button>
 
         <Logo size="sm" />
-        <h1 className="successor-title">청년 첫 화면</h1>
-
-        {/* TODO: 청년 첫 화면 내용 */}
+        <h1 className="successor-title">이어받고 싶은 가게,<br />함께 찾아볼까요?</h1>
+        <p className="successor-desc">준비해 온 경험과 앞으로의 바람을 알려 주세요.<br />사장님과 잘 맞는 가게를 찾는 데 도움이 돼요.</p>
+        <div className="successor-intro">
+          <strong>청년 등록에서 알려 주세요</strong>
+          <ul>
+            <li>음식점에서 일한 경험</li>
+            <li>준비한 자금과 대출 계획</li>
+            <li>이어받고 싶은 업종과 지역</li>
+          </ul>
+        </div>
 
         <div className="spacer" />
+        <button type="button" className="btn btn-primary block" onClick={() => navigate('/successor/register')}>내 이야기 들려주기</button>
       </main>
     </div>
   );
