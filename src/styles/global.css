@@ -1,0 +1,147 @@
+:root {
+  --navy: #0d4a73;
+  --navy-dark: #0a3a5b;
+  --sky: #4ab3ef;
+  --sky-dark: #1a7fbf;
+  --sky-50: #e6f4fc;
+  --text: #191f28;
+  --sub: #4e5968;
+  --muted: #8b95a1;
+  --bg: #f2f4f6;
+  --surface: #ffffff;
+  --line: #e5e8eb;
+  --chip: #f2f4f6;
+  --green: #1b8a3c;
+  --green-50: #e3f6e8;
+  --orange: #c2560b;
+  --orange-50: #fff0e3;
+  --kakao: #fee500;
+  --radius: 16px;
+  --radius-lg: 24px;
+  --font: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', sans-serif;
+  --font-logo: 'Black Han Sans', var(--font);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  font-family: var(--font);
+  color: var(--text);
+  background: #dfe3e8;
+  -webkit-font-smoothing: antialiased;
+  word-break: keep-all;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+input {
+  font: inherit;
+  color: inherit;
+}
+
+/* ---------- 앱 셸 ---------- */
+.app {
+  position: relative;
+  max-width: 420px;
+  min-height: 100vh;
+  min-height: 100dvh;
+  margin: 0 auto;
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+}
+
+.screen {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 0 20px 24px;
+}
+
+.spacer {
+  flex: 1;
+}
+
+/* ---------- 버튼 ---------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 56px;
+  padding: 0 20px;
+  border-radius: var(--radius);
+  font-size: 17px;
+  font-weight: 700;
+  transition: transform 0.08s ease, filter 0.15s ease;
+}
+
+.btn:active {
+  transform: scale(0.98);
+}
+
+.btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.btn.block {
+  width: 100%;
+}
+
+.btn-gray {
+  background: var(--chip);
+  color: var(--text);
+}
+
+.btn-kakao {
+  background: var(--kakao);
+  color: #191919;
+}
+
+
+/* ---------- 로고 ---------- */
+.logo {
+  font-family: var(--font-logo);
+  color: var(--navy);
+  font-size: 34px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  letter-spacing: 0.01em;
+}
+
+.logo i {
+  display: inline-block;
+  width: 0.36em;
+  height: 0.36em;
+  margin: 0 0.12em;
+  border-radius: 50%;
+  background: var(--sky);
+}
+
+.logo.sm {
+  font-size: 22px;
+}
+
