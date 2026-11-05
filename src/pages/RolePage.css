@@ -1,0 +1,78 @@
+.role .logo {
+  margin-top: 24px;
+}
+
+.role-title {
+  margin-top: 24px;
+  font-size: 30px;
+  line-height: 1.4;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.role-desc {
+  margin-top: 12px;
+  color: var(--sub);
+  font-size: 16px;
+}
+
+.role-options {
+  margin-top: 36px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.role-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  padding: 22px 20px;
+  text-align: left;
+  border-radius: var(--radius-lg);
+  border: 2px solid var(--line);
+  background: var(--surface);
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.role-card.selected {
+  border-color: var(--sky-dark);
+  background: var(--sky-50);
+}
+
+.role-icon {
+  flex: none;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--sky-50);
+  color: var(--navy);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.role-card.selected .role-icon {
+  background: var(--navy);
+  color: #fff;
+}
+
+.role-text {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.role-text strong {
+  font-size: 19px;
+  font-weight: 800;
+  color: var(--navy);
+}
+
+.role-text span {
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--sub);
+  white-space: pre-line;
+}
