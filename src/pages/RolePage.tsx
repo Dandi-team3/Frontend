@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Logo from '../components/Logo';
+import { useDemo } from '../state/DemoContext';
 import './RolePage.css';
 
 type Role = 'owner' | 'successor';
@@ -43,10 +44,11 @@ const ROLES: { id: Role; icon: ReactNode; title: string; desc: string }[] = [
 
 export default function RolePage() {
   const navigate = useNavigate();
+  const { setRole: saveRole } = useDemo();
   const [role, setRole] = useState<Role | null>(null);
 
-  // TODO: 선택한 역할 저장(dev-login 연동)
   const handleNext = () => {
+    if (role) saveRole(role);
     if (role === 'owner') navigate('/owner');
     if (role === 'successor') navigate('/successor');
   };
@@ -66,7 +68,7 @@ export default function RolePage() {
           <br />
           오셨나요?
         </h1>
-        <p className="role-desc">나중에 언제든 바꿀 수 있어요</p>
+        <p className="role-desc">물려주는 분인지, 이어받는 분인지 골라 주세요</p>
 
         <div className="role-options" role="radiogroup" aria-label="역할 선택">
           {ROLES.map((r) => (

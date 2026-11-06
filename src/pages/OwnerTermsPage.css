@@ -1,0 +1,125 @@
+.owner-terms-form {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  margin-top: 28px;
+}
+
+.owner-terms-field,
+.owner-terms-fieldset {
+  min-width: 0;
+}
+
+.owner-terms-fieldset {
+  border: 0;
+}
+
+.owner-terms-money {
+  position: relative;
+}
+
+.owner-terms-price {
+  padding-right: 76px;
+  color: var(--navy);
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.owner-terms-unit {
+  position: absolute;
+  top: 50%;
+  right: 16px;
+  color: var(--sub);
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.owner-terms-chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.owner-terms-choice {
+  position: relative;
+}
+
+.owner-terms-hint,
+.owner-terms-count {
+  margin-top: 8px;
+}
+
+.owner-terms-other-label {
+  margin-top: 20px;
+}
+
+.owner-terms-other-label span {
+  color: var(--muted);
+  font-weight: 400;
+}
+
+.owner-terms-other {
+  display: block;
+  min-height: 104px;
+  line-height: 1.7;
+  resize: vertical;
+}
+
+.owner-terms-page select.flow-input {
+  padding-right: 32px;
+}
+
+.owner-terms-time-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 12px minmax(0, 1fr);
+  align-items: end;
+  gap: 8px;
+}
+
+.owner-terms-time-row > div {
+  min-width: 0;
+}
+
+.owner-terms-time-row .flow-input {
+  min-width: 0;
+  padding-inline: 10px;
+}
+
+.owner-terms-time-label {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--sub);
+  font-size: 13px;
+}
+
+.owner-terms-time-divider {
+  align-self: end;
+  padding-bottom: 18px;
+  color: var(--muted);
+  text-align: center;
+}
+
+.owner-terms-early-morning {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  margin-top: 12px;
+  color: var(--text);
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.owner-terms-early-morning input {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  accent-color: var(--navy);
+}
+
+@media (max-width: 350px) {
+  .owner-terms-time-row .flow-input {
+    padding-inline: 8px;
+    font-size: 14px;
+  }
+}
