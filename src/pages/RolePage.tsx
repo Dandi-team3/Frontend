@@ -45,7 +45,7 @@ const ROLES: { id: Role; icon: ReactNode; title: string; desc: string }[] = [
 
 export default function RolePage() {
   const navigate = useNavigate();
-  const { setRole: saveRole, offerStatus } = useDemo();
+  const { setRole: saveRole, onboardingComplete } = useDemo();
   const [role, setRole] = useState<Role | null>(null);
 
   const [isSaving, setIsSaving] = useState(false);
@@ -67,9 +67,7 @@ export default function RolePage() {
       }
     }
     saveRole(role);
-    if (role && offerStatus === 'accepted') navigate('/succession/home');
-    else if (role === 'owner') navigate('/owner');
-    else if (role === 'successor') navigate('/successor');
+    navigate(onboardingComplete[role] ? '/home' : '/onboarding/profile', { replace: true });
   };
 
   return (

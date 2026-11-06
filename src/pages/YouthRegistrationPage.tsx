@@ -1,7 +1,8 @@
 import { useRef, useState, type FormEvent } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import FlowLayout from "../components/FlowLayout";
 import { useDemo } from "../state/DemoContext";
+import { getShopById } from '../data/shops';
 import "./RegistrationPages.css";
 
 const EXPERIENCES = ["없음", "1년 미만", "1~3년", "3년 이상"];
@@ -18,7 +19,15 @@ function formatFunds(value: string) {
 
 export default function YouthRegistrationPage() {
   const navigate = useNavigate();
-  const { youthProfile, setYouthProfile, setRole } = useDemo();
+  const [searchParams] = useSearchParams();
+  const isOnboarding = searchParams.get('onboarding') === '1';
+  const selectedShop = getShopById(searchParams.get('shop') ?? '');
+  const returnTo = isOnboarding
+    ? '/home'
+    : searchParams.get('from') === 'matching'
+      ? `/matching${selectedShop ? `?shop=${encodeURIComponent(selectedShop.id)}` : ''}`
+      : '/my';
+  const { youthProfile, setYouthProfile, setRole, completeOnboarding } = useDemo();
   const [invalidGroup, setInvalidGroup] = useState<
     "industries" | "regions" | null
   >(null);
@@ -48,14 +57,18 @@ export default function YouthRegistrationPage() {
     }
     setInvalidGroup(null);
     setRole("successor");
-    navigate("/offers/current");
+    if (isOnboarding && !completeOnboarding('successor')) {
+      navigate('/onboarding/profile', { replace: true });
+      return;
+    }
+    navigate(returnTo, { replace: isOnboarding, state: { notice: '매칭 조건을 저장했어요.' } });
   };
 
   return (
     <FlowLayout
-      title="청년 등록"
-      backTo="/successor"
-      progress={{ current: 2, total: 3 }}
+      title={isOnboarding ? '청년 등록' : '매칭 조건'}
+      backTo={isOnboarding ? '/onboarding/profile' : returnTo}
+      progress={isOnboarding ? { current: 2, total: 2 } : undefined}
       className="youth-registration-page"
       footer={
         <button
@@ -63,7 +76,7 @@ export default function YouthRegistrationPage() {
           form="youth-registration-form"
           className="btn btn-primary block"
         >
-          다음
+          {isOnboarding ? '시작하기' : '저장하기'}
         </button>
       }
     >

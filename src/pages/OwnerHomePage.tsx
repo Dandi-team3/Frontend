@@ -4,7 +4,7 @@ import './OwnerHomePage.css';
 
 const STEPS = [
   { title: '가게 정보', desc: '가게 이름, 업종, 위치와 대표 메뉴' },
-  { title: '승계 조건', desc: '인수 금액, 포함 항목과 함께 일할 조건' },
+  { title: '물려줄 내용', desc: '받을 금액과 함께 넘길 것' },
   { title: '은퇴 희망일', desc: '가게를 물려주고 싶은 날짜' },
 ];
 
@@ -16,7 +16,7 @@ export default function OwnerHomePage() {
   return (
     <div className="app">
       <main className="screen owner">
-        <button type="button" className="back" aria-label="뒤로" onClick={() => navigate('/role', { replace: true })}>
+        <button type="button" className="back" aria-label="내 정보로" onClick={() => navigate('/my')}>
           <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true">
             <path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
           </svg>

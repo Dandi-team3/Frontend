@@ -33,7 +33,7 @@ export default function PlanPage() {
   if (!accepted || !checklistDone || !plan) {
     const canGenerate = accepted && checklistDone;
     return (
-      <FlowLayout title="AI 승계 계획" backTo={accepted ? '/succession/home' : '/succession/schedule'} className="plan-page">
+      <FlowLayout title={role === 'owner' ? '함께 정할 약속' : 'AI 승계 계획'} backTo={accepted ? '/succession/home' : '/succession/schedule'} className="plan-page">
         <h1 className="flow-title">{canGenerate ? <>체크리스트를<br />모두 확인했어요</> : <>체크리스트를 마치면<br />만들 수 있어요</>}</h1>
         <p className="flow-desc">{canGenerate ? '체크리스트와 가일정으로 승계 계획 초안을 만들어요.' : '두 분이 체크리스트를 모두 확인해야 계획을 만들 수 있어요.'}</p>
         {canGenerate
@@ -65,7 +65,7 @@ export default function PlanPage() {
   };
 
   return (
-    <FlowLayout title="AI 승계 계획" backTo="/succession/home" footer={footer} className="plan-page">
+    <FlowLayout title={role === 'owner' ? '함께 정할 약속' : 'AI 승계 계획'} backTo="/succession/home" footer={footer} className="plan-page">
       <span className="plan-badge"><Tag kind="outline">예시 초안{plan.version > 1 ? ` · ${plan.version}번째 수정본` : ''}</Tag></span>
       <h1 className="flow-title">{shop.name}<br />승계 계획</h1>
       <p className="flow-desc">바꾸고 싶은 조건은 상대방에게 제안하고, 이야기를 나누며 맞춰 보세요.</p>

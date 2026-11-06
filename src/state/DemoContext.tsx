@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, type ReactNode } from 'react';
 import { CANDIDATES, CHECKLIST_ITEMS } from '../data/demo';
 import { todayISO } from '../lib/dates';
-import { buildShopDetails, DEMO_SHOP, EMPTY_SHOP_DRAFT, type ShopDetails, type ShopDraft } from '../lib/shop';
+import { buildShopDetails, DEMO_SHOP, EMPTY_SHOP_DRAFT, SHOP_CATEGORIES, type ShopDetails, type ShopDraft } from '../lib/shop';
 
 export type YouthProfile = {
   experience: string;
@@ -12,10 +12,20 @@ export type YouthProfile = {
 };
 
 export type Role = 'owner' | 'successor';
+export type PersonalInfo = { name: string; age: string; phone: string; email: string };
+export function hasRequiredPersonalInfo(info: PersonalInfo) {
+  const age = Number(info.age);
+  return Boolean(info.name.trim() && /^\d+$/.test(info.age)
+    && Number.isInteger(age) && age >= 15 && age <= 100);
+}
 type OfferStatus = 'idle' | 'sent' | 'accepted' | 'rejected';
 type DemoState = {
   role: Role;
   setRole: (value: Role) => void;
+  personalInfo: PersonalInfo;
+  setPersonalInfo: (value: PersonalInfo) => void;
+  onboardingComplete: Record<Role, boolean>;
+  completeOnboarding: (role: Role) => boolean;
   retirementDate: string | null;
   setRetirementDate: (value: string | null) => void;
   successionRetirementDate: string | null;
@@ -44,13 +54,15 @@ const DemoContext = createContext<DemoState | null>(null);
 
 export function DemoProvider({ children }: { children: ReactNode }) {
   const [role, setRole] = useState<Role>('successor');
+  const [personalInfo, setPersonalInfo] = useState<PersonalInfo>({ name: '', age: '', phone: '', email: '' });
+  const [onboardingComplete, setOnboardingComplete] = useState<Record<Role, boolean>>({ owner: false, successor: false });
   const [retirementDate, setRetirementDate] = useState<string | null>('2027-08-31');
   const [shopDraft, setShopDraft] = useState<ShopDraft>(() => ({ ...EMPTY_SHOP_DRAFT, handoverItems: [] }));
   const [offerSnapshot, setOfferSnapshot] = useState<ShopDetails | null>(null);
   const [successionShop, setSuccessionShop] = useState<ShopDetails | null>(null);
   const [shopPhotos, setShopPhotos] = useState<File[]>([]);
   const [offerMessage, setOfferMessage] = useState('');
-  const [youthProfile, setYouthProfile] = useState<YouthProfile>({ experience: '1~3년', funds: '3000', loanPlan: 'loan', industries: ['한식'], regions: ['중구', '남구'] });
+  const [youthProfile, setYouthProfile] = useState<YouthProfile>({ experience: '', funds: '', loanPlan: '', industries: [], regions: [] });
   const [selectedCandidateId, setCandidateId] = useState(CANDIDATES[0].id);
   const [offerStatus, updateOfferStatus] = useState<OfferStatus>('idle');
   const [acceptedDate, setAcceptedDate] = useState(todayISO);
@@ -59,6 +71,21 @@ export function DemoProvider({ children }: { children: ReactNode }) {
   const shop = buildShopDetails(shopDraft, retirementDate);
   const offerShop = (offerStatus === 'accepted' ? successionShop : offerSnapshot) ?? (role === 'owner' ? shop : DEMO_SHOP);
   const successionRetirementDate = successionShop?.retireDate ?? null;
+
+  const completeOnboarding = (targetRole: Role) => {
+    const basicInfoReady = hasRequiredPersonalInfo(personalInfo);
+    const roleInfoReady = targetRole === 'owner'
+      ? Boolean(shopDraft.ownerName.trim() && shopDraft.name.trim() && SHOP_CATEGORIES.includes(shopDraft.category)
+        && shopDraft.district.trim() && /^\d+$/.test(shopDraft.askingPrice)
+        && Number.isSafeInteger(Number(shopDraft.askingPrice)) && Number(shopDraft.askingPrice) > 0
+        && Number(shopDraft.askingPrice) <= 2_147_483_647)
+      : Boolean(youthProfile.experience && /^\d+$/.test(youthProfile.funds)
+        && Number.isSafeInteger(Number(youthProfile.funds)) && Number(youthProfile.funds) >= 0
+        && youthProfile.loanPlan && youthProfile.industries.length && youthProfile.regions.length);
+    if (!basicInfoReady || !roleInfoReady) return false;
+    setOnboardingComplete((previous) => ({ ...previous, [targetRole]: true }));
+    return true;
+  };
 
   const setSelectedCandidateId = (value: string) => {
     if (offerStatus === 'accepted') return;
@@ -91,7 +118,7 @@ export function DemoProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <DemoContext.Provider value={{ checklistConfirms, toggleChecklistItem, confirmChecklistAsOther, checklistDone, role, setRole, retirementDate, setRetirementDate, successionRetirementDate, shopDraft, setShopDraft, shop, offerShop, shopPhotos, setShopPhotos, offerMessage, setOfferMessage, youthProfile, setYouthProfile, selectedCandidateId, setSelectedCandidateId, offerStatus, setOfferStatus, acceptedDate }}>
+    <DemoContext.Provider value={{ checklistConfirms, toggleChecklistItem, confirmChecklistAsOther, checklistDone, role, setRole, personalInfo, setPersonalInfo, onboardingComplete, completeOnboarding, retirementDate, setRetirementDate, successionRetirementDate, shopDraft, setShopDraft, shop, offerShop, shopPhotos, setShopPhotos, offerMessage, setOfferMessage, youthProfile, setYouthProfile, selectedCandidateId, setSelectedCandidateId, offerStatus, setOfferStatus, acceptedDate }}>
       {children}
     </DemoContext.Provider>
   );

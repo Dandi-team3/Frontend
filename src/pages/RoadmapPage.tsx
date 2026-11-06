@@ -16,7 +16,7 @@ export default function RoadmapPage() {
 
   if (!planAgreedByBoth) {
     return (
-      <FlowLayout title="수습 로드맵" backTo={accepted ? '/succession/home' : '/succession/schedule'} className="roadmap-page">
+      <FlowLayout title={role === 'owner' ? '배우는 과정 확인' : '수습 로드맵'} backTo={accepted ? '/succession/home' : '/succession/schedule'} className="roadmap-page">
         <h1 className="flow-title">계획에 동의하면<br />만들어져요</h1>
         <p className="flow-desc">두 분이 승계 계획에 동의하면 수습 로드맵이 만들어져요.</p>
         <Link to="/succession/plan" className="btn btn-primary block succ-empty-action">AI 승계 계획 보기</Link>
@@ -34,7 +34,7 @@ export default function RoadmapPage() {
   };
 
   return (
-    <FlowLayout title="수습 로드맵" backTo="/succession/home" className="roadmap-page">
+    <FlowLayout title={role === 'owner' ? '배우는 과정 확인' : '수습 로드맵'} backTo="/succession/home" className="roadmap-page">
       <h1 className="flow-title">{viewer},<br />{current ? `수습 ${current.seq}단계예요` : '수습을 모두 마쳤어요'}</h1>
       <p className="flow-desc">{role === 'owner' ? '일을 마치면 완료를 눌러 주세요. 모두 끝나면 다음 단계가 열려요.' : '사장님이 완료로 표시하면 여기에 나타나요.'}</p>
 

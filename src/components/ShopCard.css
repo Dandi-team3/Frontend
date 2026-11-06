@@ -1,0 +1,157 @@
+.listed-shop-card {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+
+.listed-shop-link {
+  display: block;
+  border-radius: inherit;
+}
+
+.listed-shop-link:hover .listed-shop-heading h2 {
+  color: var(--sky-dark);
+}
+
+.listed-shop-link:focus-visible {
+  outline: 3px solid var(--sky-dark);
+  outline-offset: -3px;
+}
+
+.listed-shop-visual {
+  aspect-ratio: 1.9;
+}
+
+.listed-shop-status {
+  position: absolute;
+  z-index: 1;
+  top: 14px;
+  left: 14px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--navy);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.listed-shop-body {
+  padding: 18px;
+}
+
+.listed-shop-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.listed-shop-heading h2 {
+  min-width: 0;
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.5;
+}
+
+.listed-shop-heading svg {
+  flex-shrink: 0;
+  color: var(--muted);
+}
+
+.listed-shop-meta {
+  margin-top: 4px;
+  color: var(--sub);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.listed-shop-menu {
+  margin-top: 14px;
+  color: var(--sub);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.listed-shop-menu strong {
+  margin-left: 8px;
+  color: var(--text);
+  font-weight: 500;
+}
+
+.listed-shop-price {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 12px;
+  margin-top: 14px;
+}
+
+.listed-shop-price > span {
+  color: var(--sub);
+  font-size: 13px;
+}
+
+.listed-shop-price > strong {
+  color: var(--navy);
+  font-size: 19px;
+  font-weight: 800;
+}
+
+.listed-shop-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 14px;
+  list-style: none;
+}
+
+.listed-shop-tags li {
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: var(--chip);
+  color: var(--sub);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.listed-shop-match {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+  color: var(--navy);
+  font-size: 13px;
+}
+
+.listed-shop-match > strong {
+  font-size: 24px;
+  line-height: 1.3;
+}
+
+.listed-shop-match > strong span {
+  margin-left: 2px;
+  font-size: 15px;
+}
+
+.listed-shop-card.is-owner .listed-shop-heading h2 {
+  font-size: 22px;
+}
+
+.listed-shop-card.is-owner :is(.listed-shop-meta, .listed-shop-menu, .listed-shop-price > span) {
+  font-size: 16px;
+}
+
+.listed-shop-card.is-owner .listed-shop-price > strong {
+  font-size: 21px;
+}
+
+.listed-shop-card.is-owner .listed-shop-tags li {
+  font-size: 14px;
+}
+
+.listed-shop-card.is-owner .listed-shop-status { font-size: 14px; }

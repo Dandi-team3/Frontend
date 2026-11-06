@@ -1,5 +1,5 @@
 import { useRef, useState, type FormEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import AddressSearchDialog from '../components/AddressSearchDialog';
 import FlowLayout from '../components/FlowLayout';
 import ShopPhotoPicker from '../components/ShopPhotoPicker';
@@ -16,7 +16,10 @@ const REQUIRED_FIELDS = [
 
 export default function OwnerShopPage() {
   const navigate = useNavigate();
-  const { shopDraft, setShopDraft, shopPhotos, setShopPhotos, setRole } = useDemo();
+  const [searchParams] = useSearchParams();
+  const isOnboarding = searchParams.get('onboarding') === '1';
+  const suffix = isOnboarding ? '?onboarding=1' : '';
+  const { shopDraft, setShopDraft, shopPhotos, setShopPhotos, setRole, personalInfo, setPersonalInfo } = useDemo();
 
   const [searchOpen, setSearchOpen] = useState(false);
   const districtInput = useRef<HTMLInputElement>(null);
@@ -34,8 +37,15 @@ export default function OwnerShopPage() {
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const form = event.currentTarget;
+    const ownerName = isOnboarding ? personalInfo.name.trim() : shopDraft.ownerName.trim();
+
+    if (isOnboarding && !ownerName) {
+      navigate('/onboarding/profile', { replace: true });
+      return;
+    }
 
     for (const { key, message } of REQUIRED_FIELDS) {
+      if (isOnboarding && key === 'ownerName') continue;
       const input = form.elements.namedItem(key);
       if (input instanceof HTMLInputElement && !shopDraft[key].trim()) {
         input.setCustomValidity(message);
@@ -46,21 +56,22 @@ export default function OwnerShopPage() {
 
     setShopDraft({
       ...shopDraft,
-      ownerName: shopDraft.ownerName.trim(),
+      ownerName,
       name: shopDraft.name.trim(),
       district: shopDraft.district.trim(),
       mainMenu: shopDraft.mainMenu.trim(),
       address: shopDraft.address.trim(),
     });
+    setPersonalInfo({ ...personalInfo, name: ownerName });
     setRole('owner');
-    navigate('/owner/terms');
+    navigate(`/owner/terms${suffix}`);
   };
 
   return (
     <FlowLayout
       title="가게 등록"
-      backTo="/owner"
-      progress={{ current: 1, total: 3 }}
+      backTo={isOnboarding ? '/onboarding/profile' : '/my'}
+      progress={{ current: isOnboarding ? 2 : 1, total: isOnboarding ? 4 : 3 }}
       className="owner-shop-page"
       footer={(
         <button type="submit" form="owner-shop-form" className="btn btn-primary block">
@@ -72,7 +83,7 @@ export default function OwnerShopPage() {
       <p className="flow-desc">가게에 맞는 청년을 찾을 수 있도록 기본 정보를 입력해 주세요.</p>
 
       <form id="owner-shop-form" className="owner-shop-form" onSubmit={handleSubmit}>
-        <div className="owner-shop-field">
+        {!isOnboarding && <div className="owner-shop-field">
           <label className="flow-label" htmlFor="owner-name">사장님 이름</label>
           <input
             id="owner-name"
@@ -89,7 +100,7 @@ export default function OwnerShopPage() {
               updateField('ownerName', event.currentTarget.value);
             }}
           />
-        </div>
+        </div>}
 
         <div className="owner-shop-field">
           <label className="flow-label" htmlFor="shop-name">가게 이름</label>

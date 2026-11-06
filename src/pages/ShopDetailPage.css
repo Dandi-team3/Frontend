@@ -1,0 +1,255 @@
+.shop-detail-page {
+  padding: 16px 20px 32px;
+}
+
+.shop-detail-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  margin-left: -6px;
+  padding: 6px;
+  border-radius: 8px;
+  color: var(--sub);
+  font-size: 13px;
+}
+
+.shop-detail-page a:focus-visible {
+  outline: 3px solid var(--sky-dark);
+  outline-offset: 3px;
+}
+
+.shop-detail-hero {
+  min-height: 200px;
+  border-radius: var(--radius-lg);
+}
+
+.shop-detail-photo {
+  margin-top: 8px;
+}
+
+.shop-detail-photo figcaption {
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.6;
+  text-align: right;
+}
+
+.shop-detail-intro {
+  margin-top: 24px;
+}
+
+.shop-detail-location {
+  color: var(--sky-dark);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.6;
+}
+
+.shop-detail-intro h1 {
+  margin-top: 5px;
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1.45;
+  letter-spacing: -0.03em;
+}
+
+.shop-detail-address,
+.shop-detail-owner {
+  margin-top: 8px;
+  color: var(--sub);
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.shop-detail-owner {
+  margin-top: 3px;
+}
+
+.shop-detail-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 16px;
+  list-style: none;
+}
+
+.shop-detail-tags li {
+  padding: 5px 9px;
+  border-radius: 6px;
+  background: var(--sky-50);
+  color: var(--navy);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.shop-detail-section {
+  margin-top: 28px;
+  padding-top: 24px;
+  border-top: 1px solid var(--line);
+}
+
+.shop-detail-section h2 {
+  font-size: 19px;
+  font-weight: 800;
+  line-height: 1.5;
+}
+
+.shop-detail-story {
+  margin-top: 14px;
+  color: var(--sub);
+  font-size: 14px;
+  line-height: 1.9;
+  white-space: pre-line;
+}
+
+.shop-detail-highlights {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 16px;
+  padding: 16px;
+  border-radius: 14px;
+  background: var(--sky-50);
+  list-style: none;
+}
+
+.shop-detail-highlights li {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  color: var(--navy);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.shop-detail-highlights li > span {
+  flex-shrink: 0;
+  color: var(--sky-dark);
+  font-weight: 700;
+}
+
+.shop-detail-menus {
+  margin-top: 8px;
+  list-style: none;
+}
+
+.shop-detail-menus li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 0;
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+.shop-detail-menus li + li {
+  border-top: 1px solid var(--line);
+}
+
+.shop-detail-menus strong {
+  flex-shrink: 0;
+  color: var(--navy);
+}
+
+.shop-detail-conditions {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  margin-top: 18px;
+  padding: 18px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.shop-detail-conditions > div {
+  display: grid;
+  grid-template-columns: minmax(82px, 0.8fr) minmax(0, 1.4fr);
+  gap: 16px;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.shop-detail-conditions dt {
+  color: var(--sub);
+}
+
+.shop-detail-conditions dd {
+  min-width: 0;
+  text-align: right;
+}
+
+.shop-detail-conditions > div:first-child dd {
+  color: var(--navy);
+  font-weight: 800;
+}
+
+.shop-detail-action {
+  margin-top: 28px;
+  padding-top: 24px;
+  border-top: 1px solid var(--line);
+}
+
+.shop-detail-action p {
+  margin-bottom: 14px;
+  color: var(--sub);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.shop-detail-action .btn {
+  min-height: 56px;
+  height: auto;
+  padding: 14px 16px;
+  text-align: center;
+  line-height: 1.6;
+}
+
+.shop-detail-action .btn:hover {
+  background: var(--navy-dark);
+}
+
+.shop-detail-page.is-owner :is(.shop-detail-address, .shop-detail-owner, .shop-detail-story, .shop-detail-menus li, .shop-detail-conditions > div, .shop-detail-action p) {
+  font-size: 16px;
+}
+
+.shop-detail-page.is-owner .shop-detail-section h2 {
+  font-size: 21px;
+}
+
+.shop-detail-page.is-owner .shop-detail-highlights li,
+.shop-detail-page.is-owner .shop-detail-tags li {
+  font-size: 14px;
+}
+
+.shop-detail-not-found {
+  padding-top: 56px;
+}
+
+.shop-detail-not-found h1 {
+  font-size: 25px;
+  line-height: 1.5;
+}
+
+.shop-detail-not-found p {
+  margin: 16px 0 28px;
+  color: var(--sub);
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+@media (max-width: 350px) {
+  .shop-detail-intro h1 {
+    font-size: 26px;
+  }
+
+  .shop-detail-conditions {
+    padding-inline: 12px;
+  }
+
+  .shop-detail-conditions > div {
+    gap: 10px;
+  }
+}

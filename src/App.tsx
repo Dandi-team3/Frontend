@@ -17,6 +17,16 @@ import SuccessionHomePage from './pages/SuccessionHomePage';
 import PaymentsPage from './pages/PaymentsPage';
 import { DemoProvider } from './state/DemoContext';
 import { SuccessionProvider } from './state/SuccessionContext';
+import MainLayout from './components/MainLayout';
+import HomePage from './pages/HomePage';
+import ShopExplorePage from './pages/ShopExplorePage';
+import ShopDetailPage from './pages/ShopDetailPage';
+import MatchingHubPage from './pages/MatchingHubPage';
+import EducationPage from './pages/EducationPage';
+import MyPage from './pages/MyPage';
+import PersonalInfoPage from './pages/PersonalInfoPage';
+import OnboardingProfilePage from './pages/OnboardingProfilePage';
+import PolicyPage from './pages/PolicyPage';
 
 export default function App() {
   return (
@@ -25,6 +35,17 @@ export default function App() {
         <Routes>
           <Route path="/" element={<LoginPage />} />
           <Route path="/role" element={<RolePage />} />
+          <Route path="/onboarding/profile" element={<OnboardingProfilePage />} />
+          <Route element={<MainLayout />}>
+            <Route path="/home" element={<HomePage />} />
+            <Route path="/shops" element={<ShopExplorePage />} />
+            <Route path="/shops/:id" element={<ShopDetailPage />} />
+            <Route path="/matching" element={<MatchingHubPage />} />
+            <Route path="/education" element={<EducationPage />} />
+            <Route path="/my" element={<MyPage />} />
+            <Route path="/my/profile" element={<PersonalInfoPage />} />
+            <Route path="/my/:document" element={<PolicyPage />} />
+          </Route>
           <Route path="/owner" element={<OwnerHomePage />} />
           <Route path="/successor" element={<SuccessorHomePage />} />
           <Route path="/owner/register" element={<RetirementPage />} />

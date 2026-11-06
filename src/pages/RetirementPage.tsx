@@ -1,5 +1,5 @@
 import { useRef, useState, type FormEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import FlowLayout from '../components/FlowLayout';
 import { addMonths, buildSchedule, formatKoreanDate, todayISO } from '../lib/dates';
 import { useDemo } from '../state/DemoContext';
@@ -14,7 +14,9 @@ const QUICK_DATES = [
 
 export default function RetirementPage() {
   const navigate = useNavigate();
-  const { retirementDate, setRetirementDate, setRole, shopDraft } = useDemo();
+  const [searchParams] = useSearchParams();
+  const isOnboarding = searchParams.get('onboarding') === '1';
+  const { retirementDate, setRetirementDate, setRole, shopDraft, completeOnboarding } = useDemo();
   const [quickDate, setQuickDate] = useState<number | 'unknown' | null>(
     retirementDate === null ? 'unknown' : null,
   );
@@ -26,7 +28,15 @@ export default function RetirementPage() {
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setRole('owner');
-    navigate('/owner/matches');
+    if (isOnboarding) {
+      if (!completeOnboarding('owner')) {
+        navigate('/onboarding/profile', { replace: true });
+        return;
+      }
+      navigate('/home', { replace: true });
+      return;
+    }
+    navigate('/my', { state: { notice: '가게 정보를 저장했어요.' } });
   };
 
   const openDatePicker = () => {
@@ -44,12 +54,12 @@ export default function RetirementPage() {
   return (
     <FlowLayout
       title="가게 등록"
-      backTo="/owner/terms"
-      progress={{ current: 3, total: 3 }}
+      backTo={`/owner/terms${isOnboarding ? '?onboarding=1' : ''}`}
+      progress={{ current: isOnboarding ? 4 : 3, total: isOnboarding ? 4 : 3 }}
       className="retirement-page"
       footer={(
         <button type="submit" form="retirement-form" className="btn btn-primary block">
-          다음
+          {isOnboarding ? '시작하기' : '저장하기'}
         </button>
       )}
     >

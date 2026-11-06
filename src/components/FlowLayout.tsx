@@ -1,5 +1,7 @@
 import { useEffect, type ReactNode } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, Navigate, useLocation } from 'react-router-dom';
+import BottomNav from './BottomNav';
+import { hasRequiredPersonalInfo, useDemo } from '../state/DemoContext';
 import '../styles/flow.css';
 
 type FlowLayoutProps = {
@@ -12,14 +14,21 @@ type FlowLayoutProps = {
 };
 
 export default function FlowLayout({ title, backTo, progress, children, footer, className = '' }: FlowLayoutProps) {
+  const { pathname } = useLocation();
+  const { role, onboardingComplete, personalInfo } = useDemo();
+  const showTabs = pathname.startsWith('/succession/') || pathname.startsWith('/offers/') || pathname === '/owner/matches';
   useEffect(() => {
     document.title = `${title} | 물려받기`;
     window.scrollTo(0, 0);
   }, [title]);
 
+  if (showTabs && (!onboardingComplete[role] || !hasRequiredPersonalInfo(personalInfo))) {
+    return <Navigate to="/onboarding/profile" replace />;
+  }
+
   return (
-    <div className="app">
-      <div className={`flow-page ${className}`}>
+    <div className={`app${role === 'owner' ? ' is-owner' : ''}`}>
+      <div className={`flow-page ${className}${showTabs ? ' with-main-tabs' : ''}${role === 'owner' ? ' owner-readable' : ''}`}>
         <header className="flow-header">
           <Link className="flow-back" to={backTo} replace aria-label="이전 화면으로">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -37,6 +46,7 @@ export default function FlowLayout({ title, backTo, progress, children, footer, 
         <main className="flow-content">{children}</main>
         {footer && <footer className="flow-footer">{footer}</footer>}
       </div>
+      {showTabs && <BottomNav />}
     </div>
   );
 }

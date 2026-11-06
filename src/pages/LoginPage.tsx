@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Logo from '../components/Logo';
 import './LoginPage.css';
 
@@ -47,8 +47,8 @@ export default function LoginPage() {
             휴대폰 번호로 시작하기
           </button>
           <p className="login-terms">
-            시작하면 <a href="#terms">이용약관</a>과 <a href="#privacy">개인정보 처리방침</a>에
-            동의하게 돼요
+            시작하기 전에 <Link to="/my/terms">이용약관 안내</Link>와 <Link to="/my/privacy">개인정보 안내</Link>를
+            확인해 주세요
           </p>
         </div>
       </main>

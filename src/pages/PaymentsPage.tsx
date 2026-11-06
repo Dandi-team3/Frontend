@@ -20,7 +20,7 @@ export default function PaymentsPage() {
 
   if (!planAgreedByBoth) {
     return (
-      <FlowLayout title="납입 관리" backTo={accepted ? '/succession/home' : '/succession/schedule'} className="payments-page">
+      <FlowLayout title={role === 'owner' ? '받은 돈 확인' : '납입 관리'} backTo={accepted ? '/succession/home' : '/succession/schedule'} className="payments-page">
         <h1 className="flow-title">계획에 동의하면<br />만들어져요</h1>
         <p className="flow-desc">두 분이 승계 계획에 동의하면 납입 일정이 만들어져요.</p>
         <Link to="/succession/plan" className="btn btn-primary block succ-empty-action">AI 승계 계획 보기</Link>
@@ -48,7 +48,7 @@ export default function PaymentsPage() {
     : undefined;
 
   return (
-    <FlowLayout title="납입 관리" backTo="/succession/home" footer={footer} className="payments-page">
+    <FlowLayout title={role === 'owner' ? '받은 돈 확인' : '납입 관리'} backTo="/succession/home" footer={footer} className="payments-page">
       <section className="succ-card is-tinted pay-remaining" aria-label="남은 금액">
         <span className="pay-label">남은 금액</span>
         <strong>{formatWon(total - confirmedAmount)}</strong>

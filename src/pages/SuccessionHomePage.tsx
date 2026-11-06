@@ -12,10 +12,10 @@ export default function SuccessionHomePage() {
 
   if (!accepted) {
     return (
-      <FlowLayout title="승계 홈" backTo="/role" className="home-page">
+      <FlowLayout title={role === 'owner' ? '진행 상황' : '승계 홈'} backTo="/education" className="home-page">
         <h1 className="flow-title">아직 진행 중인<br />승계가 없어요</h1>
         <p className="flow-desc">제안을 수락하면 이곳에서 승계 진행 상황을 볼 수 있어요.</p>
-        <Link to={role === 'owner' ? '/owner' : '/successor'} className="btn btn-primary block succ-empty-action">첫 화면으로</Link>
+        <Link to="/education" className="btn btn-primary block succ-empty-action">제안 목록 보기</Link>
       </FlowLayout>
     );
   }
@@ -33,7 +33,7 @@ export default function SuccessionHomePage() {
   ];
 
   return (
-    <FlowLayout title="승계 홈" backTo="/role" className="home-page">
+    <FlowLayout title={role === 'owner' ? '진행 상황' : '승계 홈'} backTo="/education" className="home-page">
       <h1 className="flow-title">{viewer},<br />{status === 'COMPLETED' ? '승계를 마쳤어요' : pendingActions.length ? `확인할 일이 ${pendingActions.length}개 있어요` : '지금 확인할 일이 없어요'}</h1>
 
       <ul className="succ-cards">

@@ -27,13 +27,13 @@ export default function MatchingPage() {
   };
 
   return (
-    <FlowLayout title="매칭" backTo="/owner/register" className="matching-page">
+    <FlowLayout title="청년 찾기" backTo="/matching" className="matching-page">
       <h1 className="flow-title">
         {shop.name}에 맞는
         <br />
         청년 {CANDIDATES.length}명을 찾았어요
       </h1>
-      <p className="flow-desc">마음에 드는 청년에게 승계를 제안해 보세요</p>
+      <p className="flow-desc">청년의 이야기를 보고 가게를 물려줄 분을 찾아보세요.</p>
       {hasActiveSuccession && (
         <p className="flow-note matching-active-note" role="status">
           진행 중인 승계가 있어요.{' '}
@@ -67,7 +67,7 @@ export default function MatchingPage() {
                     <span>{candidate.age}세 · {candidate.career}</span>
                   </span>
                   <span className="matching-score">
-                    <span>적합도</span>
+                    <span>잘 맞는 정도</span>
                     <strong>{candidate.score}<span>점</span></strong>
                   </span>
                 </span>
@@ -142,7 +142,7 @@ export default function MatchingPage() {
                   disabled={hasActiveSuccession}
                   onClick={() => handleOffer(candidate.id)}
                 >
-                  {hasActiveSuccession ? '승계 진행 중' : '승계 제안하기'}
+                  {hasActiveSuccession ? '함께 진행 중이에요' : '이 청년에게 제안하기'}
                 </button>
               )}
             </article>

@@ -24,7 +24,7 @@ export default function ChecklistPage() {
 
   if (offerStatus !== 'accepted') {
     return (
-      <FlowLayout title="체크리스트" backTo="/succession/schedule" className="checklist-page">
+      <FlowLayout title={role === 'owner' ? '함께 확인할 것' : '체크리스트'} backTo="/succession/schedule" className="checklist-page">
         <h1 className="flow-title">제안을 수락하면<br />확인할 수 있어요</h1>
         <p className="flow-desc">승계 제안을 수락한 뒤에 두 분이 함께 체크리스트를 확인해요.</p>
         <Link to="/offers/current" className="btn btn-primary block checklist-empty-action">제안 확인하기</Link>
@@ -42,7 +42,7 @@ export default function ChecklistPage() {
   };
 
   return (
-    <FlowLayout title="체크리스트" backTo="/succession/home" className="checklist-page">
+    <FlowLayout title={role === 'owner' ? '함께 확인할 것' : '체크리스트'} backTo="/succession/home" className="checklist-page">
       <h1 className="flow-title">승계 전에<br />두 분이 각자 확인해요</h1>
       <p className="flow-desc">{dueDate ? `${dueDate}까지 · ` : ''}{viewerName} 화면</p>
 

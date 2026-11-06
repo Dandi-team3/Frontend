@@ -1,5 +1,5 @@
 import { useRef, useState, type FormEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import FlowLayout from '../components/FlowLayout';
 import { HANDOVER_ITEMS } from '../lib/shop';
 import { useDemo } from '../state/DemoContext';
@@ -7,19 +7,23 @@ import './OwnerTermsPage.css';
 
 const MAX_ASKING_PRICE = 2_147_483_647;
 const APPRENTICE_MONTHS = Array.from({ length: 10 }, (_, index) => index + 3);
+const SIMPLE_ITEM_LABELS: Record<string, string> = { '상호·간판': '가게 이름·간판', '거래처·단골': '거래하는 곳·단골', '운영 노하우': '가게 운영 방법' };
 
 function formatPrice(value: string) {
   return value.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 }
 
 function priceValidationMessage(value: string) {
-  if (!/^[1-9]\d*$/.test(value)) return '인수 금액을 0보다 큰 정수로 입력해 주세요.';
-  if (Number(value) > MAX_ASKING_PRICE) return '인수 금액은 2,147,483,647만 원 이하로 입력해 주세요.';
+  if (!/^[1-9]\d*$/.test(value)) return '가게를 넘길 금액을 0보다 크게 적어 주세요.';
+  if (Number(value) > MAX_ASKING_PRICE) return '금액이 너무 커요. 입력한 금액을 다시 확인해 주세요.';
   return '';
 }
 
 export default function OwnerTermsPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const isOnboarding = searchParams.get('onboarding') === '1';
+  const suffix = isOnboarding ? '?onboarding=1' : '';
   const { shopDraft, setShopDraft } = useDemo();
   const priceInput = useRef<HTMLInputElement>(null);
   const endTimeInput = useRef<HTMLInputElement>(null);
@@ -74,14 +78,14 @@ export default function OwnerTermsPage() {
     setPriceError('');
     setItemsError('');
     setTimeError('');
-    navigate('/owner/register');
+    navigate(`/owner/register${suffix}`);
   };
 
   return (
     <FlowLayout
       title="가게 등록"
-      backTo="/owner/shop"
-      progress={{ current: 2, total: 3 }}
+      backTo={`/owner/shop${suffix}`}
+      progress={{ current: isOnboarding ? 3 : 2, total: isOnboarding ? 4 : 3 }}
       className="owner-terms-page"
       footer={(
         <button type="submit" form="owner-terms-form" className="btn btn-primary block">
@@ -90,11 +94,11 @@ export default function OwnerTermsPage() {
       )}
     >
       <h1 className="flow-title">어떤 조건으로<br />가게를 물려주실 건가요?</h1>
-      <p className="flow-desc">인수 금액과 함께 물려줄 것, 배워 갈 시간을 알려 주세요.</p>
+      <p className="flow-desc">얼마에 넘길지, 무엇을 함께 줄지 알려 주세요.</p>
 
       <form id="owner-terms-form" className="owner-terms-form" onSubmit={handleSubmit}>
         <div className="owner-terms-field">
-          <label className="flow-label" htmlFor="shop-asking-price">희망 인수 금액</label>
+          <label className="flow-label" htmlFor="shop-asking-price">가게를 넘길 금액</label>
           <div className="owner-terms-money">
             <input
               ref={priceInput}
@@ -125,7 +129,7 @@ export default function OwnerTermsPage() {
         </div>
 
         <fieldset className="owner-terms-fieldset">
-          <legend className="flow-label">인수 금액에 포함할 항목</legend>
+          <legend className="flow-label">함께 넘길 것</legend>
           <div className="owner-terms-chip-list">
             {HANDOVER_ITEMS.map((item) => (
               <label key={item} className={`flow-chip owner-terms-choice${shopDraft.handoverItems.includes(item) ? ' is-selected' : ''}`}>
@@ -137,7 +141,7 @@ export default function OwnerTermsPage() {
                   checked={shopDraft.handoverItems.includes(item)}
                   onChange={() => toggleHandoverItem(item)}
                 />
-                {item}
+                {SIMPLE_ITEM_LABELS[item] ?? item}
               </label>
             ))}
           </div>
@@ -159,12 +163,12 @@ export default function OwnerTermsPage() {
               setShopDraft({ ...shopDraft, otherHandoverItems: event.target.value });
             }}
           />
-          <p id="shop-items-count" className="flow-caption owner-terms-count">기타 내용 {shopDraft.otherHandoverItems.length}/120자 · 포함 항목 전체 {combinedItems.length}/200자</p>
+          <p id="shop-items-count" className="flow-caption owner-terms-count">{shopDraft.otherHandoverItems.length}/120자</p>
           {itemsError && <p id="shop-items-error" className="flow-error" role="alert">{itemsError}</p>}
         </fieldset>
 
         <div className="owner-terms-field">
-          <label className="flow-label" htmlFor="shop-apprentice-months">함께 배울 수습 기간</label>
+          <label className="flow-label" htmlFor="shop-apprentice-months">함께 배우는 기간</label>
           <select
             id="shop-apprentice-months"
             className="flow-input"

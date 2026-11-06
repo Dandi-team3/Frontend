@@ -75,8 +75,8 @@ export default function OfferPage() {
   ) : isResolved ? (
     <>
       <p className="offer-status" role="status">{offerStatus === 'accepted' ? '제안을 수락했어요.' : '제안을 거절했어요.'}</p>
-      <Link to={offerStatus === 'accepted' ? '/succession/schedule' : '/successor'} className="btn btn-primary block">
-        {offerStatus === 'accepted' ? '승계 가일정 보기' : '청년 화면으로 돌아가기'}
+      <Link to={offerStatus === 'accepted' ? '/succession/schedule' : '/education'} className="btn btn-primary block">
+        {offerStatus === 'accepted' ? '승계 가일정 보기' : '받은 제안으로 돌아가기'}
       </Link>
     </>
   ) : (
@@ -90,7 +90,7 @@ export default function OfferPage() {
   );
 
   return (
-    <FlowLayout title={isOwner ? '승계 제안' : '받은 제안'} backTo={isOwner ? '/owner/matches' : '/successor/register'} footer={footer} className="offer-page">
+    <FlowLayout title={isOwner ? '가게 물려주기 제안' : '받은 제안'} backTo={isOwner ? '/owner/matches' : '/education'} footer={footer} className="offer-page">
       {!isOwner && !isResolved && <span className="offer-badge offer-deadline">{deadline}까지 답해 주세요</span>}
       <h1 className="flow-title offer-title">
         {isOwner ? <>{candidate.name} 님에게<br />승계를 제안해 보세요</> : <>{ownerLabel}이<br />승계를 제안했어요</>}
@@ -107,14 +107,14 @@ export default function OfferPage() {
 
       <section className="offer-card" aria-labelledby="offer-details-heading">
         <div className="offer-card-heading">
-          <h2 id="offer-details-heading">제안 내용</h2>
+          <h2 id="offer-details-heading">{isOwner ? '물려줄 내용' : '제안 내용'}</h2>
           {isOwner && <Link to="/owner/terms" className="offer-edit-link">승계 조건 수정</Link>}
         </div>
         <dl className="offer-details">
-          <div><dt>인수 금액</dt><dd><strong>{shop.amount === null ? '금액 미정' : `${shop.amount.toLocaleString('ko-KR')}만 원`}</strong></dd></div>
-          <div><dt>포함</dt><dd>{shop.included}</dd></div>
+          <div><dt>{isOwner ? '받을 금액' : '인수 금액'}</dt><dd><strong>{shop.amount === null ? '금액 미정' : `${shop.amount.toLocaleString('ko-KR')}만 원`}</strong></dd></div>
+          <div><dt>{isOwner ? '함께 넘길 것' : '포함'}</dt><dd>{shop.included}</dd></div>
           <div><dt>은퇴 희망일</dt><dd>{retirementDate ? formatKoreanDate(retirementDate) : '함께 정할 예정이에요'}</dd></div>
-          <div><dt>수습 기간</dt><dd>{shop.trainingMonths}개월</dd></div>
+          <div><dt>{isOwner ? '배우는 기간' : '수습 기간'}</dt><dd>{shop.trainingMonths}개월</dd></div>
           <div><dt>근무 시간</dt><dd>{shop.workHours}</dd></div>
         </dl>
       </section>
