@@ -1,7 +1,9 @@
-import { type FormEvent } from 'react';
+import { useRef, useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
+import AddressSearchDialog from '../components/AddressSearchDialog';
 import FlowLayout from '../components/FlowLayout';
 import ShopPhotoPicker from '../components/ShopPhotoPicker';
+import type { PostcodeResult } from '../lib/postcode';
 import { SHOP_CATEGORIES, type ShopDraft } from '../lib/shop';
 import { useDemo } from '../state/DemoContext';
 import './OwnerShopPage.css';
@@ -14,11 +16,20 @@ const REQUIRED_FIELDS = [
 
 export default function OwnerShopPage() {
   const navigate = useNavigate();
-  const { shopDraft, setShopDraft, shopPhoto, setShopPhoto, setRole } = useDemo();
+  const { shopDraft, setShopDraft, shopPhotos, setShopPhotos, setRole } = useDemo();
+
+  const [searchOpen, setSearchOpen] = useState(false);
+  const districtInput = useRef<HTMLInputElement>(null);
 
   function updateField<K extends keyof ShopDraft>(field: K, value: ShopDraft[K]) {
     setShopDraft({ ...shopDraft, [field]: value });
   }
+
+  const handleAddressSelect = ({ address, sido, sigungu }: PostcodeResult) => {
+    districtInput.current?.setCustomValidity('');
+    setShopDraft({ ...shopDraft, district: sigungu || sido, address });
+    setSearchOpen(false);
+  };
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -133,10 +144,22 @@ export default function OwnerShopPage() {
           />
         </div>
 
+        <div className="owner-shop-field">
+          <span className="flow-label">가게 위치</span>
+          <button type="button" className="owner-shop-search" onClick={() => setSearchOpen(true)}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+              <circle cx="11" cy="11" r="7" />
+              <path d="m20 20-3.5-3.5" />
+            </svg>
+            도로명, 건물명, 지번으로 검색
+          </button>
+        </div>
+
         <div className="owner-shop-field-row">
           <div className="owner-shop-field">
             <label className="flow-label" htmlFor="shop-district">가게 지역</label>
             <input
+              ref={districtInput}
               id="shop-district"
               name="district"
               className="flow-input"
@@ -180,16 +203,18 @@ export default function OwnerShopPage() {
             autoComplete="street-address"
             value={shopDraft.address}
             maxLength={200}
-            placeholder="가게 주소를 입력해 주세요"
+            placeholder="검색 후 층·호수를 적어 주세요"
             onChange={(event) => updateField('address', event.target.value)}
           />
         </div>
 
         <section className="owner-shop-field owner-shop-photo" aria-labelledby="owner-shop-photo-heading">
           <h2 id="owner-shop-photo-heading" className="flow-label">가게 사진 <span className="owner-shop-optional">선택</span></h2>
-          <ShopPhotoPicker file={shopPhoto} onChange={setShopPhoto} editable />
+          <ShopPhotoPicker files={shopPhotos} onChange={setShopPhotos} editable />
         </section>
       </form>
+
+      <AddressSearchDialog open={searchOpen} onClose={() => setSearchOpen(false)} onSelect={handleAddressSelect} />
     </FlowLayout>
   );
 }

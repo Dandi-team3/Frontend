@@ -8,7 +8,7 @@ export default function SuccessorHomePage() {
   return (
     <div className="app">
       <main className="screen successor">
-        <button type="button" className="back" aria-label="뒤로" onClick={() => navigate(-1)}>
+        <button type="button" className="back" aria-label="뒤로" onClick={() => navigate('/role', { replace: true })}>
           <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true">
             <path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
           </svg>

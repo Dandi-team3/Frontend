@@ -28,6 +28,15 @@
   padding: 0;
 }
 
+/* 스크롤은 유지하고 스크롤바만 숨긴다. */
+* {
+  scrollbar-width: none;
+}
+
+*::-webkit-scrollbar {
+  display: none;
+}
+
 html,
 body,
 #root {

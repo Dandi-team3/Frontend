@@ -15,10 +15,6 @@
 .schedule-stage p { margin-top: 3px; color: var(--sub); font-size: 13px; line-height: 1.7; }
 .schedule-note { margin-top: 28px; }
 .schedule-warning { margin-top: 16px; }
-.schedule-caption { margin-top: 10px; }
-.schedule-request-status { display: flex; flex-direction: column; gap: 6px; margin-top: 16px; }
-.schedule-request-status strong { color: var(--navy); }
-.schedule-request-label { margin-top: 20px; }
 .schedule-date-link { display: inline-block; margin-top: 12px; color: var(--navy); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
 
 @media (max-width: 350px) {

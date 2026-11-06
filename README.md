@@ -24,6 +24,11 @@ npm run build   # 타입 체크 + 빌드
 | `/successor/register` | 청년 경력·자금·희망 조건 |
 | `/owner/matches` | 청년 매칭·제안 진입 |
 | `/offers/current` | 받은 제안 / 사장님 제안 확인 |
-| `/succession/schedule` | 승계 가일정·일정 변경 요청 |
+| `/succession/home` | 승계 홈 (할 일·단계 승인·메뉴) |
+| `/succession/schedule` | 승계 가일정 |
+| `/succession/checklist` | 체크리스트 |
+| `/succession/plan` | AI 승계 계획 |
+| `/succession/roadmap` | 수습 로드맵 |
+| `/succession/payments` | 납입 관리 |
 
 현재 새 화면은 예시 데이터로 동작하며 새로고침하면 초기 상태로 돌아갑니다. 실제 인증·저장·제안 전송 API는 아직 연결하지 않았습니다. 백엔드 연동 규칙은 [docs/backend-contract.md](docs/backend-contract.md)를 참고하세요.

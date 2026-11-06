@@ -44,19 +44,21 @@ const ROLES: { id: Role; icon: ReactNode; title: string; desc: string }[] = [
 
 export default function RolePage() {
   const navigate = useNavigate();
-  const { setRole: saveRole } = useDemo();
+  const { setRole: saveRole, offerStatus } = useDemo();
   const [role, setRole] = useState<Role | null>(null);
 
   const handleNext = () => {
-    if (role) saveRole(role);
-    if (role === 'owner') navigate('/owner');
-    if (role === 'successor') navigate('/successor');
+    if (!role) return;
+    saveRole(role);
+    if (role && offerStatus === 'accepted') navigate('/succession/home');
+    else if (role === 'owner') navigate('/owner');
+    else if (role === 'successor') navigate('/successor');
   };
 
   return (
     <div className="app">
       <main className="screen role">
-        <button type="button" className="back" aria-label="뒤로" onClick={() => navigate(-1)}>
+        <button type="button" className="back" aria-label="뒤로" onClick={() => navigate('/', { replace: true })}>
           <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true">
             <path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
           </svg>

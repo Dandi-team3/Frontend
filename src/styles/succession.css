@@ -1,0 +1,76 @@
+/* 승계 진행 화면(D1~D6) 공통 */
+.succ-tag { display: inline-block; flex-shrink: 0; padding: 2px 10px; border: 1px solid var(--muted); border-radius: 999px; color: var(--sub); font-size: 12px; line-height: 1.6; white-space: nowrap; }
+.succ-tag.is-filled { border-color: var(--navy); background: var(--navy); color: var(--surface); }
+.succ-tag.is-dashed { border-style: dashed; }
+.succ-tag.is-outline { border-color: var(--navy); color: var(--navy); }
+
+.succ-card { padding: 16px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
+.succ-card.is-active { border: 1.5px solid var(--navy); }
+.succ-card.is-tinted { border-color: transparent; background: var(--sky-50); }
+.succ-cards { display: flex; flex-direction: column; gap: 12px; margin-top: 20px; list-style: none; }
+.succ-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.succ-row-top { align-items: flex-start; }
+.succ-card h2 { font-size: 17px; line-height: 1.5; font-weight: 700; }
+.succ-meta { margin-top: 4px; color: var(--sub); font-size: 13px; line-height: 1.7; }
+
+.succ-progress-bar { height: 8px; margin-top: 10px; overflow: hidden; border-radius: 999px; background: var(--line); }
+.succ-progress-bar.is-large { height: 10px; }
+.succ-progress-bar > span { display: block; height: 100%; border-radius: inherit; background: var(--navy); }
+
+.succ-small-btn { flex-shrink: 0; min-height: 38px; padding: 6px 14px; border: 1.5px solid var(--navy); border-radius: 12px; background: var(--surface); color: var(--navy); font-size: 14px; font-weight: 700; }
+.succ-small-btn:hover { background: var(--sky-50); }
+.succ-small-btn.is-primary { background: var(--navy); color: var(--surface); }
+.succ-small-btn.is-primary:hover { background: var(--navy-dark); }
+.succ-small-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.succ-dialog-input { margin-top: 12px; }
+.home-action-link { display: flex; align-items: center; justify-content: center; }
+.succ-actions { display: flex; gap: 8px; margin-top: 12px; }
+.succ-actions > * { flex: 1; text-align: center; }
+.succ-textarea { min-height: 120px; resize: vertical; line-height: 1.7; }
+.succ-note { margin-top: 16px; }
+.succ-empty-action { margin-top: 28px; }
+.succ-role-switch { align-self: center; margin-top: 16px; padding: 8px; color: var(--sub); font-size: 13px; text-decoration: underline; text-underline-offset: 3px; }
+
+/* D3 AI 승계 계획 */
+.plan-badge { display: block; margin-bottom: 12px; }
+.plan-section { padding: 16px 0; border-bottom: 1px solid var(--line); }
+.plan-section h2 { font-size: 17px; font-weight: 700; }
+.plan-section p { margin-top: 8px; font-size: 14px; line-height: 1.7; }
+.plan-change { margin-top: 10px; padding: 10px 12px; border: 1px dashed var(--muted); border-radius: 12px; color: var(--sub); font-size: 13px; line-height: 1.7; }
+.plan-section .flow-input { margin-top: 10px; }
+.plan-consent { margin-top: 16px; }
+.plan-consent h2 { margin-bottom: 10px; }
+.plan-consent .succ-row + .succ-row { margin-top: 8px; }
+.plan-consent .succ-row span:first-child { font-size: 14px; }
+
+/* D4 수습 로드맵 */
+.roadmap-task { padding: 10px 0; border-top: 1px solid var(--line); }
+.roadmap-tasks { margin-top: 10px; list-style: none; }
+.roadmap-task > .succ-row > span:first-child { font-size: 14px; line-height: 1.6; }
+.roadmap-feedback { margin-top: 4px; color: var(--orange); font-size: 13px; line-height: 1.7; }
+
+/* D5 홈 */
+.home-action .succ-tag { margin-bottom: 8px; }
+.home-action h2 { font-size: 16px; }
+.home-summary-foot { margin-top: 8px; color: var(--sub); font-size: 12px; }
+.home-menu { padding: 4px 16px; }
+.home-menu ul { list-style: none; }
+.home-menu a { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.home-menu li:last-child a { border-bottom: 0; }
+.home-menu strong { display: block; font-size: 15px; line-height: 1.6; }
+.home-menu small { color: var(--sub); font-size: 12px; line-height: 1.6; }
+.home-menu i { color: var(--muted); font-size: 20px; font-style: normal; }
+
+/* D6 납입 관리 */
+.pay-remaining strong { display: block; margin-top: 6px; font-size: 30px; font-weight: 800; letter-spacing: -0.03em; color: var(--navy); }
+.pay-remaining-foot { display: flex; justify-content: space-between; gap: 12px; margin-top: 8px; color: var(--sub); font-size: 12px; }
+.pay-label { color: var(--sub); font-size: 13px; }
+.pay-group h2 { padding-bottom: 8px; border-bottom: 1px solid var(--line); font-size: 15px; }
+.pay-row { padding: 12px 0; border-bottom: 1px solid var(--line); }
+.pay-row:last-child { padding-bottom: 0; border-bottom: 0; }
+.pay-row strong { display: block; font-size: 15px; line-height: 1.6; }
+.pay-row small { color: var(--sub); font-size: 12px; line-height: 1.6; }
+.pay-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
+.pay-confirm { margin-top: 8px; width: 100%; }
+.pay-form { display: flex; flex-direction: column; gap: 4px; margin-top: 16px; }
+.pay-form .flow-label { margin: 8px 0 4px; }

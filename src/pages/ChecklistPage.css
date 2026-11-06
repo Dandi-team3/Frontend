@@ -1,0 +1,16 @@
+.checklist-progress { margin-top: 20px; padding: 16px; border-radius: var(--radius); background: var(--sky-50); }
+.checklist-progress-row { display: flex; justify-content: space-between; gap: 12px; color: var(--sub); font-size: 14px; line-height: 1.5; }
+.checklist-progress-row strong { color: var(--navy); }
+.checklist-items { display: flex; flex-direction: column; gap: 12px; margin-top: 12px; list-style: none; }
+.checklist-item { padding: 16px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
+.checklist-item h2 { font-size: 17px; line-height: 1.5; font-weight: 700; }
+.checklist-item p { margin-top: 4px; color: var(--sub); font-size: 13px; line-height: 1.7; }
+.checklist-item-footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-top: 12px; }
+.checklist-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.checklist-confirm { flex-shrink: 0; min-height: 38px; padding: 6px 14px; border: 1.5px solid var(--navy); border-radius: 12px; background: var(--surface); color: var(--navy); font-size: 14px; font-weight: 700; }
+.checklist-confirm:hover { background: var(--sky-50); }
+.checklist-cancel { flex-shrink: 0; min-height: 32px; padding: 4px 2px; color: var(--sub); font-size: 12px; text-decoration: underline; text-underline-offset: 3px; }
+.checklist-note { margin-top: 12px; }
+.checklist-actions { display: flex; flex-direction: column; gap: 12px; margin-top: 12px; }
+.checklist-actions .btn { flex-shrink: 0; }
+.checklist-empty-action { margin-top: 28px; }

@@ -54,7 +54,7 @@ export default function YouthRegistrationPage() {
   return (
     <FlowLayout
       title="청년 등록"
-      backTo="/role"
+      backTo="/successor"
       progress={{ current: 2, total: 3 }}
       className="youth-registration-page"
       footer={

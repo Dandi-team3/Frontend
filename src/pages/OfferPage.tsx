@@ -11,7 +11,7 @@ import './OfferPage.css';
 
 export default function OfferPage() {
   const navigate = useNavigate();
-  const { role, shopDraft, retirementDate: draftRetirementDate, offerShop: shop, selectedCandidateId, offerStatus, setOfferStatus, shopPhoto, setShopPhoto, offerMessage, setOfferMessage } = useDemo();
+  const { role, shopDraft, retirementDate: draftRetirementDate, offerShop: shop, selectedCandidateId, offerStatus, setOfferStatus, shopPhotos, setShopPhotos, offerMessage, setOfferMessage } = useDemo();
   const retirementDate = shop.retireDate;
   const ownerLabel = shop.owner ? `${shop.owner} 사장님` : '사장님';
   const location = shop.district && shop.address.includes(shop.district)
@@ -84,7 +84,7 @@ export default function OfferPage() {
         {isOwner ? <>{candidate.name} 님에게<br />승계를 제안해 보세요</> : <>{ownerLabel}이<br />승계를 제안했어요</>}
       </h1>
 
-      <ShopPhotoPicker file={shopPhoto} onChange={setShopPhoto} editable={isOwner} />
+      <ShopPhotoPicker files={shopPhotos} onChange={setShopPhotos} editable={isOwner} />
 
       <div className="offer-shop-heading">
         <h2>{shop.name}</h2>

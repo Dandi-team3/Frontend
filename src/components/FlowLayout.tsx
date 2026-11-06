@@ -21,7 +21,7 @@ export default function FlowLayout({ title, backTo, progress, children, footer, 
     <div className="app">
       <div className={`flow-page ${className}`}>
         <header className="flow-header">
-          <Link className="flow-back" to={backTo} aria-label="이전 화면으로">
+          <Link className="flow-back" to={backTo} replace aria-label="이전 화면으로">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <path d="m15 18-6-6 6-6" />
             </svg>

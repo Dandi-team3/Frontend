@@ -59,6 +59,18 @@ export const CANDIDATES: Candidate[] = [
   },
 ];
 
+type ChecklistContext = { youthName: string; price: string; months: number };
+
+// 백엔드 ChecklistItem.defaults와 같은 내용. 연동 시 checklist 응답으로 바꾼다.
+export const CHECKLIST_ITEMS: { id: string; title: string; description: (context: ChecklistContext) => string }[] = [
+  { id: 'LANDLORD', title: '건물주 동의', description: ({ youthName }) => `임대차 계약을 ${youthName} 님 이름으로 넘겨도 되는지 건물주에게 확인해요` },
+  { id: 'DEBT', title: '채무와 미납금', description: () => '가게 대출, 밀린 세금·공과금이 없는지 확인해요' },
+  { id: 'FUNDS', title: '인수 자금', description: ({ price }) => `인수 금액 ${price}을 어떻게 마련할지 확인해요` },
+  { id: 'LABOR', title: '수습 근로계약', description: ({ months }) => `수습 ${months}개월 동안의 근무 시간과 급여를 정해요` },
+  { id: 'STAFF', title: '직원 고용 승계', description: () => '지금 일하는 직원이 계속 일할지 정해요' },
+  { id: 'LICENSE', title: '영업 신고 명의 변경', description: () => '영업 신고와 사업자 등록을 바꾸는 날짜를 정해요' },
+];
+
 export const SHOP = {
   name: '남문 손칼국수', owner: '김순자', since: '1987년부터', category: '칼국수', location: '중구 남산동',
   amount: 4800, included: '권리금 · 주방 설비 · 레시피', trainingMonths: 6,
