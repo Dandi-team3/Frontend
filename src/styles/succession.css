@@ -22,7 +22,6 @@
 .succ-small-btn.is-primary { background: var(--navy); color: var(--surface); }
 .succ-small-btn.is-primary:hover { background: var(--navy-dark); }
 .succ-small-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-.succ-dialog-input { margin-top: 12px; }
 .home-action-link { display: flex; align-items: center; justify-content: center; }
 .succ-actions { display: flex; gap: 8px; margin-top: 12px; }
 .succ-actions > * { flex: 1; text-align: center; }
@@ -44,8 +43,11 @@
 .plan-bubble strong { font-size: 12px; color: var(--navy); }
 .plan-message.is-mine .plan-bubble { background: var(--sky-50); }
 .plan-respond { align-self: stretch; }
-.plan-composer { margin-top: 10px; }
-.plan-composer .succ-small-btn { padding-inline: 8px; }
+.plan-bubble del { color: var(--sub); font-size: 13px; }
+.plan-composer { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+.plan-composer .succ-actions { margin-top: 0; }
+.plan-kinds { display: flex; flex-wrap: wrap; gap: 6px; }
+.plan-kinds .flow-chip { min-height: 36px; padding: 6px 12px; font: inherit; font-size: 13px; }
 .plan-consent { margin-top: 16px; }
 .plan-consent h2 { margin-bottom: 10px; }
 .plan-consent .succ-row + .succ-row { margin-top: 8px; }
@@ -55,7 +57,6 @@
 .roadmap-task { padding: 10px 0; border-top: 1px solid var(--line); }
 .roadmap-tasks { margin-top: 10px; list-style: none; }
 .roadmap-task > .succ-row > span:first-child { font-size: 14px; line-height: 1.6; }
-.roadmap-feedback { margin-top: 4px; color: var(--orange); font-size: 13px; line-height: 1.7; }
 
 /* D5 홈 */
 .home-action .succ-tag { margin-bottom: 8px; }

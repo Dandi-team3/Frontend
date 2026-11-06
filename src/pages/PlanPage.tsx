@@ -11,10 +11,20 @@ const PROPOSAL_STATES: Record<Exclude<PlanMessage['state'], null | 'pending'>, s
   replaced: '다른 제안으로 바뀜',
 };
 
+const COMPOSER_KINDS: { kind: PlanMessage['kind']; label: string }[] = [
+  { kind: 'chat', label: '말하기' },
+  { kind: 'add', label: '내용 추가' },
+  { kind: 'replace', label: '일부 바꾸기' },
+];
+
+function splitSentences(content: string) {
+  return (content.match(/[^.!?]+[.!?]*/g) ?? []).map((sentence) => sentence.trim()).filter(Boolean);
+}
+
 export default function PlanPage() {
   const { role, offerShop: shop, checklistDone } = useDemo();
   const { accepted, plan, planAgreedByBoth, generatePlan, agreePlan, youthName, planThreads, sendPlanMessage, respondToProposal } = useSuccession();
-  const [composer, setComposer] = useState<{ code: string; text: string } | null>(null);
+  const [composer, setComposer] = useState<{ code: string; kind: PlanMessage['kind']; text: string; target: string } | null>(null);
   const ownerName = `${shop.owner} 사장님`.trim();
   const youthLabel = `${youthName} 님`;
   const nameOf = (who: Role) => (who === 'owner' ? ownerName : youthLabel);
@@ -48,9 +58,9 @@ export default function PlanPage() {
     </button>
   );
 
-  const send = (kind: PlanMessage['kind']) => {
+  const send = () => {
     if (!composer?.text.trim()) return;
-    sendPlanMessage(composer.code, kind, composer.text.trim());
+    sendPlanMessage(composer.code, composer.kind, composer.text.trim(), composer.kind === 'replace' ? composer.target : undefined);
     setComposer(null);
   };
 
@@ -68,7 +78,7 @@ export default function PlanPage() {
             <div className="succ-row">
               <h2>{section.title}</h2>
               {!planAgreedByBoth && !isComposing && (
-                <button type="button" className="succ-small-btn" aria-label={`${section.title} 이야기하기`} onClick={() => setComposer({ code: section.code, text: '' })}>이야기하기</button>
+                <button type="button" className="succ-small-btn" aria-label={`${section.title} 이야기하기`} onClick={() => setComposer({ code: section.code, kind: 'chat', text: '', target: '' })}>이야기하기</button>
               )}
             </div>
             <p>{section.content}</p>
@@ -81,12 +91,14 @@ export default function PlanPage() {
                     <li key={message.id} className={`plan-message${isMine ? ' is-mine' : ''}`}>
                       <small>{nameOf(message.from)}</small>
                       <div className="plan-bubble">
-                        {message.kind === 'proposal' && <strong>조건 제안</strong>}
+                        {message.kind === 'add' && <strong>내용 추가 제안</strong>}
+                        {message.kind === 'replace' && <strong>이 부분만 변경 제안</strong>}
+                        {message.target && <del>{message.target}</del>}
                         <span>{message.text}</span>
                       </div>
                       {message.state === 'pending' && (isMine ? <small>답을 기다리고 있어요</small> : (
                         <div className="plan-respond">
-                          <small>수락하면 항목이 이 내용으로 바뀌어요</small>
+                          <small>{message.kind === 'replace' ? '수락하면 이 문장만 바뀌어요' : '수락하면 이 내용이 항목 뒤에 더해져요'}</small>
                           <div className="succ-actions">
                             <button type="button" className="succ-small-btn" aria-label={`${section.title} 제안 거절`} onClick={() => respondToProposal(section.code, false)}>거절</button>
                             <button type="button" className="succ-small-btn is-primary" aria-label={`${section.title} 제안 수락`} onClick={() => respondToProposal(section.code, true)}>수락</button>
@@ -102,18 +114,50 @@ export default function PlanPage() {
 
             {isComposing && (
               <div className="plan-composer">
+                <div className="plan-kinds" role="group" aria-label="보낼 내용 종류">
+                  {COMPOSER_KINDS.map(({ kind, label }) => (
+                    <button
+                      key={kind}
+                      type="button"
+                      className={`flow-chip${composer.kind === kind ? ' is-selected' : ''}`}
+                      aria-pressed={composer.kind === kind}
+                      onClick={() => {
+                        const first = splitSentences(section.content)[0] ?? '';
+                        setComposer(kind === 'replace' ? { ...composer, kind, target: first, text: first } : { ...composer, kind, target: '', text: composer.kind === 'replace' ? '' : composer.text });
+                      }}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+                {composer.kind === 'replace' && (
+                  <select
+                    className="flow-input"
+                    aria-label="바꿀 문장"
+                    value={composer.target}
+                    onChange={(event) => setComposer({ ...composer, target: event.target.value, text: event.target.value })}
+                  >
+                    {splitSentences(section.content).map((sentence) => <option key={sentence} value={sentence}>{sentence}</option>)}
+                  </select>
+                )}
                 <textarea
                   className="flow-input succ-textarea"
                   aria-label={`${section.title}에 보낼 내용`}
                   value={composer.text}
                   maxLength={2000}
-                  placeholder={`${nameOf(other)}께 하고 싶은 말이나 바꾸고 싶은 조건을 적어 주세요`}
-                  onChange={(event) => setComposer({ code: section.code, text: event.target.value })}
+                  placeholder={composer.kind === 'add' ? '항목에 더하고 싶은 내용을 적어 주세요' : `${nameOf(other)}께 하고 싶은 말을 적어 주세요`}
+                  onChange={(event) => setComposer({ ...composer, text: event.target.value })}
                 />
                 <div className="succ-actions">
                   <button type="button" className="succ-small-btn" onClick={() => setComposer(null)}>취소</button>
-                  <button type="button" className="succ-small-btn" disabled={!composer.text.trim()} onClick={() => send('chat')}>말 보내기</button>
-                  <button type="button" className="succ-small-btn is-primary" disabled={!composer.text.trim()} onClick={() => send('proposal')}>조건 제안</button>
+                  <button
+                    type="button"
+                    className="succ-small-btn is-primary"
+                    disabled={!composer.text.trim() || (composer.kind === 'replace' && composer.text.trim() === composer.target)}
+                    onClick={send}
+                  >
+                    {composer.kind === 'chat' ? '말 보내기' : '제안 보내기'}
+                  </button>
                 </div>
               </div>
             )}

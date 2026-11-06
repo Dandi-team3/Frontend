@@ -12,7 +12,7 @@ function monthRange(startDate: string, endDate: string) {
 
 export default function RoadmapPage() {
   const { role, offerShop: shop } = useDemo();
-  const { stages, requestTask, youthName, planAgreedByBoth, accepted, waitingApprovalCount, approveRequestedTasks } = useSuccession();
+  const { stages, completeTask, youthName, planAgreedByBoth, accepted } = useSuccession();
 
   if (!planAgreedByBoth) {
     return (
@@ -28,28 +28,27 @@ export default function RoadmapPage() {
   const viewer = role === 'owner' ? `${shop.owner} 사장님`.trim() : `${youthName} 님`;
 
   const taskControl = (task: RoadmapTask) => {
-    if (task.status === 'APPROVED') return <Tag kind="filled">승인됨</Tag>;
-    if (task.status === 'REQUESTED') return <Tag kind="dashed">승인 기다리는 중</Tag>;
-    if (role === 'successor') return <button type="button" className="succ-small-btn is-primary" aria-label={`${task.title} 완료 요청`} onClick={() => requestTask(task.id)}>완료 요청</button>;
-    return <Tag kind="outline">진행 전</Tag>;
+    if (task.status === 'APPROVED') return <Tag kind="filled">완료</Tag>;
+    if (role === 'owner') return <button type="button" className="succ-small-btn is-primary" aria-label={`${task.title} 완료`} onClick={() => completeTask(task.id)}>완료</button>;
+    return <Tag kind="dashed">진행 중</Tag>;
   };
 
   return (
     <FlowLayout title="수습 로드맵" backTo="/succession/home" className="roadmap-page">
       <h1 className="flow-title">{viewer},<br />{current ? `수습 ${current.seq}단계예요` : '수습을 모두 마쳤어요'}</h1>
-      <p className="flow-desc">마친 일은 완료 요청을 보내면 사장님이 승인해요</p>
+      <p className="flow-desc">{role === 'owner' ? '일을 마치면 완료를 눌러 주세요. 모두 끝나면 다음 단계가 열려요.' : '사장님이 완료로 표시하면 여기에 나타나요.'}</p>
 
       <ol className="succ-cards">
         {stages.map((stage) => (
           <li key={stage.seq} className={`succ-card${stage.state === 'NOW' ? ' is-active' : ''}${stage.state === 'DONE' ? ' is-tinted' : ''}`}>
             <div className="succ-row">
               <h2>{stage.seq}단계 · {stage.title}</h2>
-              {stage.state === 'DONE' && <Tag kind="filled">승인 완료</Tag>}
+              {stage.state === 'DONE' && <Tag kind="filled">단계 완료</Tag>}
               {stage.state === 'NOW' && <Tag kind="outline">진행 중</Tag>}
               {stage.state === 'LOCKED' && <Tag kind="dashed">{stage.seq - 1}단계 후</Tag>}
             </div>
             <p className="succ-meta">
-              {monthRange(stage.startDate, stage.endDate)} · {stage.state === 'DONE' ? `${stage.tasks.length}개 모두 사장님 승인` : stage.state === 'NOW' ? `${stage.tasks.length}개 중 ${stage.approvedCount}개 승인` : stage.description}
+              {monthRange(stage.startDate, stage.endDate)} · {stage.state === 'DONE' ? `${stage.tasks.length}개 모두 완료` : stage.state === 'NOW' ? `${stage.tasks.length}개 중 ${stage.approvedCount}개 완료` : stage.description}
             </p>
             {stage.state === 'NOW' && (
               <ul className="roadmap-tasks">
@@ -59,7 +58,6 @@ export default function RoadmapPage() {
                       <span>{task.title}</span>
                       {taskControl(task)}
                     </div>
-                    {task.feedback && <p className="roadmap-feedback">다시 해 보기: {task.feedback}</p>}
                   </li>
                 ))}
               </ul>
@@ -68,11 +66,6 @@ export default function RoadmapPage() {
         ))}
       </ol>
 
-      {role === 'successor' && waitingApprovalCount > 0 && (
-        <button type="button" className="btn btn-outline block succ-note" onClick={approveRequestedTasks}>예시: 사장님이 승인한 걸로 하기</button>
-      )}
-
-      <p className="flow-note succ-note">사장님이 ‘다시 해 보기’를 누르면 이유가 함께 와요. 다시 연습하고 요청하면 돼요.</p>
       <DemoRoleSwitch />
     </FlowLayout>
   );

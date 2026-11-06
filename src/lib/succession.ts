@@ -14,9 +14,10 @@ export const STATUS_LABELS: Record<SuccessionStatus, string> = {
 
 export type PlanSection = { code: string; title: string; content: string };
 
-export type TaskStatus = 'TODO' | 'REQUESTED' | 'APPROVED';
+// 청년의 완료 요청 없이 사장님이 직접 완료한다. 백엔드는 request → approve 순서라 연동 전에 API 변경이 필요하다.
+export type TaskStatus = 'TODO' | 'APPROVED';
 export type StageState = 'DONE' | 'NOW' | 'LOCKED';
-export type RoadmapTask = { id: string; title: string; status: TaskStatus; feedback: string | null };
+export type RoadmapTask = { id: string; title: string; status: TaskStatus };
 export type RoadmapStage = { seq: number; title: string; description: string; startDate: string; endDate: string; state: StageState; approvedCount: number; tasks: RoadmapTask[] };
 
 export type PaymentStatus = 'SCHEDULED' | 'REPORTED' | 'CONFIRMED';
@@ -56,7 +57,7 @@ export function buildPlanSections(shop: ShopDetails, youthName: string): PlanSec
   const pay = buildInstallmentPlans(shop);
   return [
     { code: 'ACQUISITION', title: '인수 조건', content: `${eulReul(items)} ${formatWon(shop.amount ?? 0)}에 넘겨받아요. 계약금 ${formatWon(pay[0].amount)}은 ${formatKoreanDate(schedule.planDue)}까지, 중도금 ${formatWon(pay[1].amount)}씩 두 번과 잔금 ${formatWon(pay[3].amount)}은 일정에 맞춰 나눠 내요.` },
-    { code: 'APPRENTICE', title: '수습 계획', content: `${formatKoreanDate(schedule.trainingStart)}부터 ${shop.trainingMonths}개월 동안 3단계로 배워요. 근무 시간은 ${shop.workHours}${hasBatchim(shop.workHours) ? '이에요' : '예요'}. 단계를 마치면 ${youth}이 완료를 요청하고 ${owner}이 승인해요.` },
+    { code: 'APPRENTICE', title: '수습 계획', content: `${formatKoreanDate(schedule.trainingStart)}부터 ${shop.trainingMonths}개월 동안 3단계로 배워요. 근무 시간은 ${shop.workHours}${hasBatchim(shop.workHours) ? '이에요' : '예요'}. ${youth}이 맡은 일을 마치면 ${owner}이 완료로 표시해요.` },
     { code: 'HANDOVER', title: '운영권 넘기기', content: `${formatKoreanDate(schedule.handoverStart)}부터 ${youth}이 가게를 운영하고, ${owner}은 ${formatKoreanDate(shop.retireDate!)}까지 곁에서 도와요. 잔금을 내면 승계가 끝나요.` },
     { code: 'RECIPE', title: '레시피와 단골', content: `${menu} 레시피와 단골 손님 관계를 수습 기간에 함께 넘겨요. ${owner}이 단골 손님에게 2대 사장님을 직접 소개해요.` },
     { code: 'EXIT', title: '그만두게 되면', content: '수습 중 한쪽이 그만두면 계약금을 뺀 납입 금액을 2주 안에 돌려줘요. 자세한 조건은 실제 계약서에서 정해요.' },

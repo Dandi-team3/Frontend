@@ -1,6 +1,4 @@
-import { useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
-import FlowDialog from '../components/FlowDialog';
 import FlowLayout from '../components/FlowLayout';
 import { DemoRoleSwitch, ProgressBar, Tag } from '../components/SuccessionUi';
 import { formatKoreanDate } from '../lib/dates';
@@ -10,9 +8,7 @@ import { useSuccession } from '../state/SuccessionContext';
 
 export default function SuccessionHomePage() {
   const { role, offerShop: shop, checklistDone } = useDemo();
-  const { accepted, status, progressPercent, nextStep, youthName, plan, planAgreedByBoth, stages, waitingApprovalCount, confirmedAmount, pendingActions, approveTask, sendBackTask, confirmPayment } = useSuccession();
-  const [sendBackId, setSendBackId] = useState<string | null>(null);
-  const [reason, setReason] = useState('');
+  const { accepted, status, progressPercent, nextStep, youthName, plan, planAgreedByBoth, stages, confirmedAmount, pendingActions, confirmPayment } = useSuccession();
 
   if (!accepted) {
     return (
@@ -32,17 +28,9 @@ export default function SuccessionHomePage() {
     { to: '/succession/schedule', title: '승계 가일정', sub: nextStep ? `다음: ${shortDate(nextStep.dueDate)} ${nextStep.title}` : '승계를 마쳤어요' },
     { to: '/succession/checklist', title: '체크리스트', sub: checklistDone ? '6개 모두 양쪽 확인 완료' : '두 분이 각자 확인하는 중' },
     { to: '/succession/plan', title: 'AI 승계 계획', sub: planAgreedByBoth ? '두 분 모두 동의함' : plan ? '동의 진행 중' : '체크리스트를 마치면 만들 수 있어요' },
-    { to: '/succession/roadmap', title: '수습 로드맵', sub: !planAgreedByBoth ? beforePlan : currentStage ? `${currentStage.seq}단계 진행 중 · 승인 대기 ${waitingApprovalCount}개` : '모든 단계 승인 완료' },
+    { to: '/succession/roadmap', title: '수습 로드맵', sub: !planAgreedByBoth ? beforePlan : currentStage ? `${currentStage.seq}단계 진행 중 · ${currentStage.tasks.length}개 중 ${currentStage.approvedCount}개 완료` : '모든 단계 완료' },
     { to: '/succession/payments', title: '납입 관리', sub: !planAgreedByBoth ? beforePlan : `${formatWon(shop.amount ?? 0)} 중 ${formatWon(confirmedAmount)} ${role === 'owner' ? '받음' : '확인됨'}` },
   ];
-
-  const handleSendBack = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (!sendBackId || !reason.trim()) return;
-    sendBackTask(sendBackId, reason.trim());
-    setSendBackId(null);
-    setReason('');
-  };
 
   return (
     <FlowLayout title="승계 홈" backTo="/role" className="home-page">
@@ -54,12 +42,7 @@ export default function SuccessionHomePage() {
             <Tag kind="outline">{action.title}</Tag>
             <h2>{action.description}</h2>
             <div className="succ-actions">
-              {action.type === 'ROADMAP_APPROVE' ? (
-                <>
-                  <button type="button" className="succ-small-btn" onClick={() => setSendBackId(action.taskId)}>다시 해 보기</button>
-                  <button type="button" className="succ-small-btn is-primary" onClick={() => approveTask(action.taskId)}>승인하기</button>
-                </>
-              ) : action.type === 'PAYMENT_CONFIRM' ? (
+              {action.type === 'PAYMENT_CONFIRM' ? (
                 <button type="button" className="succ-small-btn is-primary" onClick={() => confirmPayment(action.seq)}>받았어요</button>
               ) : (
                 <Link to={action.to} className="succ-small-btn is-primary home-action-link">바로 가기</Link>
@@ -98,17 +81,6 @@ export default function SuccessionHomePage() {
       </ul>
 
       <DemoRoleSwitch />
-
-      <FlowDialog open={sendBackId !== null} title="다시 해 보라고 할까요?" onClose={() => setSendBackId(null)}>
-        <p>이유를 적어 주시면 청년에게 그대로 전해져요.</p>
-        <form onSubmit={handleSendBack}>
-          <textarea className="flow-input succ-textarea succ-dialog-input" aria-label="다시 해 보라는 이유" value={reason} maxLength={300} required placeholder="예: 간을 조금 더 맞춰 보자" onChange={(event) => setReason(event.target.value)} />
-          <div className="flow-dialog-actions">
-            <button type="button" className="btn btn-gray" onClick={() => setSendBackId(null)}>취소</button>
-            <button type="submit" className="btn btn-primary" disabled={!reason.trim()}>보내기</button>
-          </div>
-        </form>
-      </FlowDialog>
     </FlowLayout>
   );
 }
