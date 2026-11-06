@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Logo from '../components/Logo';
+import { devLogin, isApiEnabled } from '../lib/api';
 import { useDemo } from '../state/DemoContext';
 import './RolePage.css';
 
@@ -47,8 +48,24 @@ export default function RolePage() {
   const { setRole: saveRole, offerStatus } = useDemo();
   const [role, setRole] = useState<Role | null>(null);
 
-  const handleNext = () => {
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleNext = async () => {
     if (!role) return;
+    if (isApiEnabled) {
+      setIsSaving(true);
+      setError(null);
+      try {
+        // 로그인 화면 연동 전까지는 백엔드 데모 시드 계정으로 개발용 로그인을 한다.
+        await devLogin(role === 'owner' ? '김순자' : '이도윤', role === 'owner' ? 'OWNER' : 'YOUTH');
+      } catch (cause) {
+        setError(cause instanceof Error ? cause.message : '요청을 처리하지 못했어요.');
+        return;
+      } finally {
+        setIsSaving(false);
+      }
+    }
     saveRole(role);
     if (role && offerStatus === 'accepted') navigate('/succession/home');
     else if (role === 'owner') navigate('/owner');
@@ -95,7 +112,8 @@ export default function RolePage() {
 
         <div className="spacer" />
 
-        <button type="button" className="btn btn-primary block" disabled={!role} onClick={handleNext}>
+        {error && <p className="role-error" role="alert">{error}</p>}
+        <button type="button" className="btn btn-primary block" disabled={!role || isSaving} onClick={handleNext}>
           다음
         </button>
       </main>

@@ -76,3 +76,10 @@
   color: var(--sub);
   white-space: pre-line;
 }
+
+.role-error {
+  margin-bottom: 12px;
+  color: #b42318;
+  font-size: 13px;
+  line-height: 1.6;
+}
