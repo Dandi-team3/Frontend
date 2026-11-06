@@ -59,6 +59,18 @@ export default function OfferPage() {
           {offerStatus === 'sent' ? '제안 보냈어요' : offerStatus === 'rejected' ? '거절된 제안이에요' : '승계 제안하기'}
         </button>
       )}
+      {offerStatus === 'sent' && (
+        <button
+          type="button"
+          className="btn btn-outline block"
+          onClick={() => {
+            setOfferStatus('accepted');
+            navigate('/succession/schedule');
+          }}
+        >
+          예시: 청년이 수락한 걸로 하기
+        </button>
+      )}
     </>
   ) : isResolved ? (
     <>

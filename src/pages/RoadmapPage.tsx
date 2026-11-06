@@ -12,7 +12,7 @@ function monthRange(startDate: string, endDate: string) {
 
 export default function RoadmapPage() {
   const { role, offerShop: shop } = useDemo();
-  const { stages, requestTask, youthName, planAgreedByBoth, accepted } = useSuccession();
+  const { stages, requestTask, youthName, planAgreedByBoth, accepted, waitingApprovalCount, approveRequestedTasks } = useSuccession();
 
   if (!planAgreedByBoth) {
     return (
@@ -67,6 +67,10 @@ export default function RoadmapPage() {
           </li>
         ))}
       </ol>
+
+      {role === 'successor' && waitingApprovalCount > 0 && (
+        <button type="button" className="btn btn-outline block succ-note" onClick={approveRequestedTasks}>예시: 사장님이 승인한 걸로 하기</button>
+      )}
 
       <p className="flow-note succ-note">사장님이 ‘다시 해 보기’를 누르면 이유가 함께 와요. 다시 연습하고 요청하면 돼요.</p>
       <DemoRoleSwitch />
