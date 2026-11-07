@@ -16,6 +16,10 @@ const LOAN_PLANS = [
   { value: true, label: "청년 창업 대출 알아보는 중" },
   { value: false, label: "대출 없이" },
 ];
+const EARLY_MORNING = [
+  { value: true, label: "가능해요" },
+  { value: false, label: "어려워요" },
+];
 const INDUSTRIES = ["한식", "양식", "중식", "일식", "카페"];
 const REGIONS = ["중구", "남구", "수성구", "북구"];
 
@@ -27,6 +31,9 @@ export default function YouthRegistrationPage() {
   const navigate = useNavigate();
   const { me, refreshMe } = useApp();
   const [youthProfile, setYouthProfile] = useState<YouthProfileRequest>(EMPTY_YOUTH_PROFILE);
+  // 0도 입력할 수 있게 금액 입력칸은 글자로 둔다.
+  const [fundsText, setFundsText] = useState("");
+  const [loanText, setLoanText] = useState("");
   const { busy, error, run } = useAction();
   const [invalidGroup, setInvalidGroup] = useState<
     "industries" | "regions" | null
@@ -39,7 +46,10 @@ export default function YouthRegistrationPage() {
     if (!me?.hasYouthProfile) return;
     let cancelled = false;
     void orNull(api.youthProfile()).then((profile) => {
-      if (!cancelled && profile) setYouthProfile(profile);
+      if (cancelled || !profile) return;
+      setYouthProfile(profile);
+      setFundsText(String(profile.fundsReady));
+      setLoanText(profile.loanAmount ? String(profile.loanAmount) : "");
     }).catch(() => {
       // 불러오지 못하면 새로 입력할 수 있게 둔다.
     });
@@ -71,7 +81,8 @@ export default function YouthRegistrationPage() {
     void run(async () => {
       await api.saveYouthProfile({
         ...youthProfile,
-        loanAmount: youthProfile.loanPlanned ? youthProfile.loanAmount : 0,
+        fundsReady: Number(fundsText),
+        loanAmount: youthProfile.loanPlanned ? Number(loanText) : 0,
       });
       await refreshMe();
       navigate("/offers/current");
@@ -146,17 +157,15 @@ export default function YouthRegistrationPage() {
               type="text"
               inputMode="numeric"
               autoComplete="off"
-              value={formatFunds(String(youthProfile.fundsReady || ""))}
+              value={formatFunds(fundsText)}
               placeholder="0"
               pattern="[0-9,]+"
-              maxLength={15}
+              maxLength={13}
               required
               aria-describedby="youth-funds-unit"
               onChange={(event) => {
                 const funds = event.target.value.replace(/,/g, "");
-                if (/^\d*$/.test(funds)) {
-                  setYouthProfile({ ...youthProfile, fundsReady: Number(funds) });
-                }
+                if (/^\d*$/.test(funds)) setFundsText(funds.replace(/^0+(?=\d)/, ""));
               }}
             />
             <span id="youth-funds-unit" className="registration-money-unit">
@@ -182,6 +191,59 @@ export default function YouthRegistrationPage() {
                   required
                   onChange={() =>
                     setYouthProfile({ ...youthProfile, loanPlanned: value })
+                  }
+                />
+                {label}
+              </label>
+            ))}
+          </div>
+          {youthProfile.loanPlanned && (
+            <div className="registration-field registration-loan-amount">
+              <label className="flow-label" htmlFor="youth-loan-amount">
+                대출 예정 금액 (선택)
+              </label>
+              <div className="registration-money-control">
+                <input
+                  id="youth-loan-amount"
+                  className="flow-input registration-money-input"
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="off"
+                  value={formatFunds(loanText)}
+                  placeholder="0"
+                  pattern="[0-9,]*"
+                  maxLength={13}
+                  aria-describedby="youth-loan-unit"
+                  onChange={(event) => {
+                    const amount = event.target.value.replace(/,/g, "");
+                    if (/^\d*$/.test(amount)) setLoanText(amount.replace(/^0+(?=\d)/, ""));
+                  }}
+                />
+                <span id="youth-loan-unit" className="registration-money-unit">
+                  만 원
+                </span>
+              </div>
+            </div>
+          )}
+        </fieldset>
+
+        <fieldset className="registration-fieldset">
+          <legend className="flow-label">새벽 근무 (단일 선택)</legend>
+          <div className="registration-chip-list">
+            {EARLY_MORNING.map(({ value, label }) => (
+              <label
+                key={label}
+                className={`flow-chip registration-choice${youthProfile.earlyMorningOk === value ? " is-selected" : ""}`}
+              >
+                <input
+                  type="radio"
+                  className="registration-choice-input"
+                  name="early-morning"
+                  value={label}
+                  checked={youthProfile.earlyMorningOk === value}
+                  required
+                  onChange={() =>
+                    setYouthProfile({ ...youthProfile, earlyMorningOk: value })
                   }
                 />
                 {label}
