@@ -1,0 +1,75 @@
+.owner .logo {
+  margin-top: 24px;
+}
+
+.owner-title {
+  margin-top: 24px;
+  font-size: 30px;
+  line-height: 1.4;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.owner-desc {
+  margin-top: 16px;
+  color: var(--sub);
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+.owner-steps {
+  list-style: none;
+  margin-top: 32px;
+  padding: 8px 20px;
+  border-radius: var(--radius-lg);
+  background: var(--sky-50);
+}
+
+.owner-step {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 0;
+}
+
+.owner-step + .owner-step {
+  border-top: 1px solid rgba(13, 74, 115, 0.1);
+}
+
+.owner-step-num {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--navy);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.owner-step-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.owner-step-text strong {
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--navy);
+}
+
+.owner-step-text span {
+  font-size: 14px;
+  color: var(--sub);
+}
+
+.owner-note {
+  margin-bottom: 12px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 14px;
+}

@@ -1,0 +1,11 @@
+.address-search-frame {
+  height: min(440px, calc(100dvh - 210px));
+  margin: 12px -16px 0; /* 검색 프레임의 최소 폭 300px을 모바일에서도 확보한다. */
+  overflow-y: auto;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.address-search-embed {
+  height: 100%;
+}
