@@ -2,7 +2,7 @@ import { useRef, useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import FlowLayout from '../components/FlowLayout';
 import { HANDOVER_ITEMS } from '../lib/shop';
-import { useDemo } from '../state/DemoContext';
+import { useApp, useShopDraftLoader } from '../state/AppContext';
 import './OwnerTermsPage.css';
 
 const MAX_ASKING_PRICE = 2_147_483_647;
@@ -20,7 +20,8 @@ function priceValidationMessage(value: string) {
 
 export default function OwnerTermsPage() {
   const navigate = useNavigate();
-  const { shopDraft, setShopDraft } = useDemo();
+  const { shopDraft, setShopDraft } = useApp();
+  useShopDraftLoader();
   const priceInput = useRef<HTMLInputElement>(null);
   const endTimeInput = useRef<HTMLInputElement>(null);
   const otherItemsInput = useRef<HTMLTextAreaElement>(null);

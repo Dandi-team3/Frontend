@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import FlowLayout from '../components/FlowLayout';
-import { DemoRoleSwitch, Tag } from '../components/SuccessionUi';
-import { useDemo, type Role } from '../state/DemoContext';
-import { useSuccession, type PlanMessage } from '../state/SuccessionContext';
+import { ActionError, LoadStatus, Tag, TestRoleSwitch } from '../components/SuccessionUi';
+import { api, orNull, type PlanSection, type ServerRole } from '../lib/api';
+import { mergeProposal, usePlanThreads, type PlanMessage } from '../lib/planThreads';
+import { useAction, useLoad } from '../lib/useApi';
+import { useApp } from '../state/AppContext';
 
 const PROPOSAL_STATES: Record<Exclude<PlanMessage['state'], null | 'pending'>, string> = {
   accepted: '수락됨',
@@ -22,62 +24,93 @@ function splitSentences(content: string) {
 }
 
 export default function PlanPage() {
-  const { role, offerShop: shop, checklistDone } = useDemo();
-  const { accepted, plan, planAgreedByBoth, generatePlan, agreePlan, youthName, planThreads, sendPlanMessage, respondToProposal } = useSuccession();
+  const { me } = useApp();
   const [composer, setComposer] = useState<{ code: string; kind: PlanMessage['kind']; text: string; target: string } | null>(null);
-  const ownerName = `${shop.owner} 사장님`.trim();
-  const youthLabel = `${youthName} 님`;
-  const nameOf = (who: Role) => (who === 'owner' ? ownerName : youthLabel);
-  const other: Role = role === 'owner' ? 'successor' : 'owner';
+  const { busy, error: actionError, run } = useAction();
+  const { data, error, loading, reload } = useLoad(async () => {
+    const summary = await orNull(api.currentSuccession());
+    return { summary, plan: summary ? await orNull(api.plan(summary.id)) : null };
+  }, [me?.id]);
+  const summary = data?.summary ?? null;
+  const { threads, save } = usePlanThreads(summary?.id ?? null);
 
-  if (!accepted || !checklistDone || !plan) {
-    const canGenerate = accepted && checklistDone;
+  if (loading || error || !data) {
     return (
-      <FlowLayout title="AI 승계 계획" backTo={accepted ? '/succession/home' : '/succession/schedule'} className="plan-page">
+      <FlowLayout title="AI 승계 계획" backTo="/succession/home" className="plan-page">
+        <LoadStatus error={error} onRetry={() => void reload()} />
+      </FlowLayout>
+    );
+  }
+
+  const plan = data.plan;
+  if (!summary || !plan) {
+    const canGenerate = summary?.status === 'PLANNING';
+    return (
+      <FlowLayout title="AI 승계 계획" backTo={summary ? '/succession/home' : '/succession/schedule'} className="plan-page">
         <h1 className="flow-title">{canGenerate ? <>체크리스트를<br />모두 확인했어요</> : <>체크리스트를 마치면<br />만들 수 있어요</>}</h1>
         <p className="flow-desc">{canGenerate ? '체크리스트와 가일정으로 승계 계획 초안을 만들어요.' : '두 분이 체크리스트를 모두 확인해야 계획을 만들 수 있어요.'}</p>
+        <ActionError message={actionError} />
         {canGenerate
-          ? <button type="button" className="btn btn-primary block succ-empty-action" onClick={generatePlan}>승계 계획 초안 만들기</button>
+          ? <button type="button" className="btn btn-primary block succ-empty-action" disabled={busy} onClick={() => void run(async () => { await api.generatePlan(summary.id); await reload(); })}>{busy ? '초안을 만들고 있어요…' : '승계 계획 초안 만들기'}</button>
           : <Link to="/succession/checklist" className="btn btn-primary block succ-empty-action">체크리스트 확인하기</Link>}
       </FlowLayout>
     );
   }
 
+  const mySide = plan.mySide;
+  const other: ServerRole = mySide === 'OWNER' ? 'YOUTH' : 'OWNER';
+  const nameOf = (who: ServerRole) => (who === 'OWNER' ? `${summary.ownerName} 사장님` : `${summary.youthName} 님`);
+  const agreed = (who: ServerRole) => (who === 'OWNER' ? plan.ownerAgreed : plan.youthAgreed);
   const hasEditByOther = plan.sections.some((section) => section.editedBy === other);
-  const hasPendingProposal = Object.values(planThreads).some((thread) => thread.some((message) => message.state === 'pending'));
-  const consentTag = (who: Role) => {
-    if (plan.agreed[who]) return <Tag kind="filled">동의함</Tag>;
+  const hasPendingProposal = Object.values(threads).some((thread) => thread.some((message) => message.state === 'pending'));
+  const consentTag = (who: ServerRole) => {
+    if (agreed(who)) return <Tag kind="filled">동의함</Tag>;
     return <Tag kind="dashed">{plan.sections.some((section) => section.editedBy && section.editedBy !== who) ? '수정 확인 전' : '동의 전'}</Tag>;
   };
 
-  const footer = planAgreedByBoth ? (
+  const footer = plan.agreedByBoth ? (
     <Link to="/succession/roadmap" className="btn btn-primary block">수습 로드맵 보기</Link>
   ) : (
-    <button type="button" className="btn btn-primary block" disabled={plan.agreed[role] || hasPendingProposal} onClick={agreePlan}>
-      {hasPendingProposal ? '답을 기다리는 제안이 있어요' : plan.agreed[role] ? `${nameOf(other)}의 동의를 기다리고 있어요` : hasEditByOther ? '고친 내용 확인하고 동의하기' : '계획에 동의하기'}
+    <button type="button" className="btn btn-primary block" disabled={busy || agreed(mySide) || hasPendingProposal} onClick={() => void run(async () => { await api.agreePlan(summary.id); await reload(); })}>
+      {hasPendingProposal ? '답을 기다리는 제안이 있어요' : agreed(mySide) ? `${nameOf(other)}의 동의를 기다리고 있어요` : hasEditByOther ? '고친 내용 확인하고 동의하기' : '계획에 동의하기'}
     </button>
   );
 
   const send = () => {
     if (!composer?.text.trim()) return;
-    sendPlanMessage(composer.code, composer.kind, composer.text.trim(), composer.kind === 'replace' ? composer.target : undefined);
+    const { code, kind, text, target } = composer;
+    const isProposal = kind !== 'chat';
+    const thread = (threads[code] ?? []).map((message) => (isProposal && message.state === 'pending' ? { ...message, state: 'replaced' as const } : message));
+    save({ ...threads, [code]: [...thread, { id: thread.length, from: mySide, kind, text: text.trim(), target: kind === 'replace' ? target : undefined, state: isProposal ? 'pending' : null }] });
     setComposer(null);
+  };
+
+  const respond = (section: PlanSection, accept: boolean) => {
+    const thread = threads[section.code] ?? [];
+    const proposal = thread.find((message) => message.state === 'pending');
+    if (!proposal) return;
+    void run(async () => {
+      // 항목 수정 API는 전체 내용을 받으므로 합친 결과를 보낸다. 수락한 쪽이 고친 것으로 저장된다.
+      if (accept) await api.editPlanSection(summary.id, section.id, mergeProposal(section.content, proposal));
+      save({ ...threads, [section.code]: thread.map((message) => (message === proposal ? { ...message, state: accept ? 'accepted' as const : 'rejected' as const } : message)) });
+      await reload();
+    });
   };
 
   return (
     <FlowLayout title="AI 승계 계획" backTo="/succession/home" footer={footer} className="plan-page">
-      <span className="plan-badge"><Tag kind="outline">예시 초안{plan.version > 1 ? ` · ${plan.version}번째 수정본` : ''}</Tag></span>
-      <h1 className="flow-title">{shop.name}<br />승계 계획</h1>
+      <span className="plan-badge"><Tag kind="outline">{plan.generatedBy === 'AI' ? 'AI 초안' : '초안'}{plan.version > 1 ? ` · ${plan.version}번째 수정본` : ''}</Tag></span>
+      <h1 className="flow-title">{summary.shopName}<br />승계 계획</h1>
       <p className="flow-desc">바꾸고 싶은 조건은 상대방에게 제안하고, 이야기를 나누며 맞춰 보세요.</p>
 
       {plan.sections.map((section) => {
-        const thread = planThreads[section.code] ?? [];
+        const thread = threads[section.code] ?? [];
         const isComposing = composer?.code === section.code;
         return (
-          <section key={section.code} className="plan-section" aria-label={section.title}>
+          <section key={section.id} className="plan-section" aria-label={section.title}>
             <div className="succ-row">
               <h2>{section.title}</h2>
-              {!planAgreedByBoth && !isComposing && (
+              {!plan.agreedByBoth && !isComposing && (
                 <button type="button" className="succ-small-btn" aria-label={`${section.title} 이야기하기`} onClick={() => setComposer({ code: section.code, kind: 'chat', text: '', target: '' })}>이야기하기</button>
               )}
             </div>
@@ -86,7 +119,7 @@ export default function PlanPage() {
             {thread.length > 0 && (
               <ul className="plan-thread" aria-label={`${section.title} 대화`}>
                 {thread.map((message) => {
-                  const isMine = message.from === role;
+                  const isMine = message.from === mySide;
                   return (
                     <li key={message.id} className={`plan-message${isMine ? ' is-mine' : ''}`}>
                       <small>{nameOf(message.from)}</small>
@@ -96,12 +129,12 @@ export default function PlanPage() {
                         {message.target && <del>{message.target}</del>}
                         <span>{message.text}</span>
                       </div>
-                      {message.state === 'pending' && (isMine ? <small>답을 기다리고 있어요</small> : (
+                      {message.state === 'pending' && !plan.agreedByBoth && (isMine ? <small>답을 기다리고 있어요</small> : (
                         <div className="plan-respond">
                           <small>{message.kind === 'replace' ? '수락하면 이 문장만 바뀌어요' : '수락하면 이 내용이 항목 뒤에 더해져요'}</small>
                           <div className="succ-actions">
-                            <button type="button" className="succ-small-btn" aria-label={`${section.title} 제안 거절`} onClick={() => respondToProposal(section.code, false)}>거절</button>
-                            <button type="button" className="succ-small-btn is-primary" aria-label={`${section.title} 제안 수락`} onClick={() => respondToProposal(section.code, true)}>수락</button>
+                            <button type="button" className="succ-small-btn" disabled={busy} aria-label={`${section.title} 제안 거절`} onClick={() => respond(section, false)}>거절</button>
+                            <button type="button" className="succ-small-btn is-primary" disabled={busy} aria-label={`${section.title} 제안 수락`} onClick={() => respond(section, true)}>수락</button>
                           </div>
                         </div>
                       ))}
@@ -167,12 +200,13 @@ export default function PlanPage() {
 
       <div className="succ-card plan-consent">
         <h2>동의</h2>
-        <div className="succ-row"><span>{ownerName}</span>{consentTag('owner')}</div>
-        <div className="succ-row"><span>{youthLabel}</span>{consentTag('successor')}</div>
+        <div className="succ-row"><span>{nameOf('OWNER')}</span>{consentTag('OWNER')}</div>
+        <div className="succ-row"><span>{nameOf('YOUTH')}</span>{consentTag('YOUTH')}</div>
       </div>
 
-      <p className="flow-note succ-note">AI가 만든 초안이라 법적 효력이 없어요. 실제 계약 전에 전문가 검토를 받으세요.</p>
-      {!planAgreedByBoth && <DemoRoleSwitch />}
+      <ActionError message={actionError} />
+      <p className="flow-note succ-note">{plan.disclaimer}</p>
+      <TestRoleSwitch summary={summary} />
     </FlowLayout>
   );
 }

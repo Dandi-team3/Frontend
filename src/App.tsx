@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import LoginPage from './pages/LoginPage';
 import RolePage from './pages/RolePage';
@@ -15,33 +16,41 @@ import PlanPage from './pages/PlanPage';
 import RoadmapPage from './pages/RoadmapPage';
 import SuccessionHomePage from './pages/SuccessionHomePage';
 import PaymentsPage from './pages/PaymentsPage';
-import { DemoProvider } from './state/DemoContext';
-import { SuccessionProvider } from './state/SuccessionContext';
+import { AppProvider, useApp } from './state/AppContext';
+
+function RequireLogin({ children }: { children: ReactNode }) {
+  const { me } = useApp();
+  return me ? children : <Navigate to="/" replace />;
+}
+
+const PROTECTED_ROUTES: { path: string; element: ReactNode }[] = [
+  { path: '/owner', element: <OwnerHomePage /> },
+  { path: '/successor', element: <SuccessorHomePage /> },
+  { path: '/owner/register', element: <RetirementPage /> },
+  { path: '/owner/shop', element: <OwnerShopPage /> },
+  { path: '/owner/terms', element: <OwnerTermsPage /> },
+  { path: '/successor/register', element: <YouthRegistrationPage /> },
+  { path: '/owner/matches', element: <MatchingPage /> },
+  { path: '/offers/current', element: <OfferPage /> },
+  { path: '/succession/home', element: <SuccessionHomePage /> },
+  { path: '/succession/schedule', element: <SchedulePage /> },
+  { path: '/succession/checklist', element: <ChecklistPage /> },
+  { path: '/succession/plan', element: <PlanPage /> },
+  { path: '/succession/roadmap', element: <RoadmapPage /> },
+  { path: '/succession/payments', element: <PaymentsPage /> },
+];
 
 export default function App() {
   return (
-    <DemoProvider>
-      <SuccessionProvider>
-        <Routes>
-          <Route path="/" element={<LoginPage />} />
-          <Route path="/role" element={<RolePage />} />
-          <Route path="/owner" element={<OwnerHomePage />} />
-          <Route path="/successor" element={<SuccessorHomePage />} />
-          <Route path="/owner/register" element={<RetirementPage />} />
-          <Route path="/owner/shop" element={<OwnerShopPage />} />
-          <Route path="/owner/terms" element={<OwnerTermsPage />} />
-          <Route path="/successor/register" element={<YouthRegistrationPage />} />
-          <Route path="/owner/matches" element={<MatchingPage />} />
-          <Route path="/offers/current" element={<OfferPage />} />
-          <Route path="/succession/home" element={<SuccessionHomePage />} />
-          <Route path="/succession/schedule" element={<SchedulePage />} />
-          <Route path="/succession/checklist" element={<ChecklistPage />} />
-          <Route path="/succession/plan" element={<PlanPage />} />
-          <Route path="/succession/roadmap" element={<RoadmapPage />} />
-          <Route path="/succession/payments" element={<PaymentsPage />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </SuccessionProvider>
-    </DemoProvider>
+    <AppProvider>
+      <Routes>
+        <Route path="/" element={<LoginPage />} />
+        <Route path="/role" element={<RolePage />} />
+        {PROTECTED_ROUTES.map(({ path, element }) => (
+          <Route key={path} path={path} element={<RequireLogin>{element}</RequireLogin>} />
+        ))}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </AppProvider>
   );
 }

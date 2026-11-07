@@ -2,8 +2,10 @@ import { useRef, useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import FlowLayout from '../components/FlowLayout';
 import { addMonths, buildSchedule, formatKoreanDate, todayISO } from '../lib/dates';
-import { useDemo } from '../state/DemoContext';
-import { earliestRetirementDate } from '../lib/shop';
+import { api } from '../lib/api';
+import { earliestRetirementDate, toShopRequest } from '../lib/shop';
+import { useAction } from '../lib/useApi';
+import { useApp, useShopDraftLoader } from '../state/AppContext';
 import './RegistrationPages.css';
 
 const QUICK_DATES = [
@@ -14,10 +16,10 @@ const QUICK_DATES = [
 
 export default function RetirementPage() {
   const navigate = useNavigate();
-  const { retirementDate, setRetirementDate, setRole, shopDraft } = useDemo();
-  const [quickDate, setQuickDate] = useState<number | 'unknown' | null>(
-    retirementDate === null ? 'unknown' : null,
-  );
+  const { retirementDate, setRetirementDate, shopDraft, refreshMe } = useApp();
+  useShopDraftLoader();
+  const [quickDate, setQuickDate] = useState<number | null>(null);
+  const { busy, error, run } = useAction();
   const dateInput = useRef<HTMLInputElement>(null);
   const today = todayISO();
   const planDue = retirementDate ? buildSchedule(retirementDate, shopDraft.apprenticeMonths).planDue : null;
@@ -25,8 +27,17 @@ export default function RetirementPage() {
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setRole('owner');
-    navigate('/owner/matches');
+    if (!retirementDate) return;
+    if (!shopDraft.name.trim() || !shopDraft.category || !shopDraft.district.trim() || !shopDraft.askingPrice) {
+      navigate('/owner/shop');
+      return;
+    }
+    void run(async () => {
+      // 여러 단계에 나눠 입력한 가게 정보를 한 번에 저장한다.
+      await api.saveShop(toShopRequest(shopDraft, retirementDate));
+      await refreshMe();
+      navigate('/owner/matches');
+    });
   };
 
   const openDatePicker = () => {
@@ -48,9 +59,12 @@ export default function RetirementPage() {
       progress={{ current: 3, total: 3 }}
       className="retirement-page"
       footer={(
-        <button type="submit" form="retirement-form" className="btn btn-primary block">
-          다음
-        </button>
+        <>
+          {error && <p className="flow-error" role="alert">{error}</p>}
+          <button type="submit" form="retirement-form" className="btn btn-primary block" disabled={busy || !retirementDate}>
+            다음
+          </button>
+        </>
       )}
     >
       <h1 className="flow-title">
@@ -65,7 +79,7 @@ export default function RetirementPage() {
           <label className="flow-label" htmlFor="retirement-date">은퇴 희망일</label>
           <div className="retirement-date-control">
             <span className="retirement-date-display" aria-hidden="true">
-              {retirementDate ? formatKoreanDate(retirementDate) : '아직 정하지 않았어요'}
+              {retirementDate ? formatKoreanDate(retirementDate) : '날짜를 골라 주세요'}
             </span>
             <span className="retirement-date-hint" aria-hidden="true">
               날짜 선택
@@ -80,7 +94,7 @@ export default function RetirementPage() {
               type="date"
               value={retirementDate ?? ''}
               min={today}
-              required={retirementDate !== null}
+              required
               aria-describedby="retirement-calculation"
               onClick={openDatePicker}
               onChange={(event) => {
@@ -108,25 +122,14 @@ export default function RetirementPage() {
                 {label}
               </button>
             ))}
-            <button
-              type="button"
-              className={`flow-chip${quickDate === 'unknown' ? ' is-selected' : ''}`}
-              aria-pressed={quickDate === 'unknown'}
-              onClick={() => {
-                setQuickDate('unknown');
-                setRetirementDate(null);
-              }}
-            >
-              아직 몰라요
-            </button>
           </div>
         </div>
 
         <p id="retirement-calculation" className="flow-note retirement-calculation" aria-live="polite">
           {!retirementDate || !planDue
-            ? '괜찮아요. 먼저 맞는 청년을 살펴보고, 은퇴 희망일은 나중에 함께 정해도 돼요.'
+            ? '은퇴 희망일을 정해야 가게를 저장하고 맞는 청년을 찾을 수 있어요.'
             : retirementDate < earliest
-              ? `[계산 안내] 수습 ${shopDraft.apprenticeMonths}개월과 준비 기간을 확보하려면 ${formatKoreanDate(earliest)} 이후가 좋아요. 먼저 매칭을 살펴보고 날짜를 조율할 수도 있어요.`
+              ? `[계산 안내] 수습 ${shopDraft.apprenticeMonths}개월과 준비 기간을 확보하려면 ${formatKoreanDate(earliest)} 이후로 골라 주세요.`
               : `[계산 안내] 수습 ${shopDraft.apprenticeMonths}개월을 넣으면 ${formatKoreanDate(planDue)}까지 청년과 승계 계획을 정하는 일정이에요.`}
         </p>
       </form>

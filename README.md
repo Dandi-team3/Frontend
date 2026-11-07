@@ -31,4 +31,12 @@ npm run build   # 타입 체크 + 빌드
 | `/succession/roadmap` | 수습 로드맵 |
 | `/succession/payments` | 납입 관리 |
 
-현재 새 화면은 예시 데이터로 동작하며 새로고침하면 초기 상태로 돌아갑니다. 실제 인증·저장·제안 전송 API는 아직 연결하지 않았습니다. 백엔드 연동 규칙은 [docs/backend-contract.md](docs/backend-contract.md)를 참고하세요.
+화면은 `.env`의 `VITE_API_URL` 서버 API로 동작합니다. 서버 CORS가 `localhost:5173`을 허용하므로 개발 서버는 5173 포트로 실행하세요. 역할 선택에서 이름과 역할로 개발용 로그인을 하며, `테스트:`로 시작하는 버튼은 개발 서버에서만 보입니다.
+
+서버 API가 없는 기능은 다음처럼 임시로 처리합니다.
+
+- 가게 사진: 브라우저 메모리에만 보관합니다.
+- 승계 계획 대화: 이 브라우저에만 저장하고, 수락한 제안만 항목 수정 API로 저장합니다.
+- 수습 항목 완료: 개발용 로그인으로 청년 완료 요청을 함께 보낸 뒤 사장님이 승인합니다. 사장님 직접 완료 API가 생기면 `RoadmapPage`의 `completeTask`를 바꿉니다.
+
+백엔드 연동 규칙은 [docs/backend-contract.md](docs/backend-contract.md)를 참고하세요.

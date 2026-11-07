@@ -1,8 +1,8 @@
 import { useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Logo from '../components/Logo';
-import { devLogin, isApiEnabled } from '../lib/api';
-import { useDemo } from '../state/DemoContext';
+import { useAction } from '../lib/useApi';
+import { useApp } from '../state/AppContext';
 import './RolePage.css';
 
 type Role = 'owner' | 'successor';
@@ -45,31 +45,20 @@ const ROLES: { id: Role; icon: ReactNode; title: string; desc: string }[] = [
 
 export default function RolePage() {
   const navigate = useNavigate();
-  const { setRole: saveRole, offerStatus } = useDemo();
+  const { login } = useApp();
   const [role, setRole] = useState<Role | null>(null);
+  const [name, setName] = useState('');
+  const { busy, error, run } = useAction();
 
-  const [isSaving, setIsSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const handleNext = async () => {
-    if (!role) return;
-    if (isApiEnabled) {
-      setIsSaving(true);
-      setError(null);
-      try {
-        // 로그인 화면 연동 전까지는 백엔드 데모 시드 계정으로 개발용 로그인을 한다.
-        await devLogin(role === 'owner' ? '김순자' : '이도윤', role === 'owner' ? 'OWNER' : 'YOUTH');
-      } catch (cause) {
-        setError(cause instanceof Error ? cause.message : '요청을 처리하지 못했어요.');
-        return;
-      } finally {
-        setIsSaving(false);
-      }
-    }
-    saveRole(role);
-    if (role && offerStatus === 'accepted') navigate('/succession/home');
-    else if (role === 'owner') navigate('/owner');
-    else if (role === 'successor') navigate('/successor');
+  const handleNext = () => {
+    if (!role || !name.trim()) return;
+    void run(async () => {
+      // 카카오 로그인이 서버에 켜지기 전까지는 이름과 역할로 개발용 로그인을 한다.
+      const me = await login(name.trim(), role === 'owner' ? 'OWNER' : 'YOUTH');
+      if (me.successionId) navigate('/succession/home');
+      else if (role === 'owner') navigate(me.hasShop ? '/owner/matches' : '/owner');
+      else navigate(me.hasYouthProfile ? '/offers/current' : '/successor');
+    });
   };
 
   return (
@@ -110,10 +99,15 @@ export default function RolePage() {
           ))}
         </div>
 
+        <label className="role-name">
+          <span>이름</span>
+          <input type="text" value={name} maxLength={50} autoComplete="name" placeholder="이름을 입력해 주세요" onChange={(event) => setName(event.target.value)} />
+        </label>
+
         <div className="spacer" />
 
         {error && <p className="role-error" role="alert">{error}</p>}
-        <button type="button" className="btn btn-primary block" disabled={!role || isSaving} onClick={handleNext}>
+        <button type="button" className="btn btn-primary block" disabled={!role || !name.trim() || busy} onClick={handleNext}>
           다음
         </button>
       </main>
