@@ -1,14 +1,13 @@
+import { useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
+import FlowDialog from '../components/FlowDialog';
 import FlowLayout from '../components/FlowLayout';
-import { CANDIDATES } from '../data/demo';
-import { buildSchedule, daysUntil, formatKoreanDate } from '../lib/dates';
-import type { SuccessionStatus } from '../lib/succession';
-import { useDemo } from '../state/DemoContext';
-import { useSuccession } from '../state/SuccessionContext';
+import { ActionError, LoadStatus, TestRoleSwitch } from '../components/SuccessionUi';
+import { api, orNull, type Schedule, type SuccessionStatus } from '../lib/api';
+import { addDays, formatKoreanDate, todayISO } from '../lib/dates';
+import { useAction, useLoad } from '../lib/useApi';
+import { useApp } from '../state/AppContext';
 import './SchedulePage.css';
-
-// 타임라인에서 지금 단계의 위치
-const CURRENT_STEP: Record<SuccessionStatus, number> = { CHECKLIST: 1, PLANNING: 2, APPRENTICE: 3, HANDOVER: 4, COMPLETED: 6 };
 
 const NEXT_LINK: Record<SuccessionStatus, { to: string; label: string }> = {
   CHECKLIST: { to: '/succession/checklist', label: '체크리스트 확인하기' },
@@ -18,70 +17,131 @@ const NEXT_LINK: Record<SuccessionStatus, { to: string; label: string }> = {
   COMPLETED: { to: '/succession/home', label: '승계 홈으로' },
 };
 
-export default function SchedulePage() {
-  const { offerShop: shop, selectedCandidateId, offerStatus, acceptedDate } = useDemo();
-  const { status } = useSuccession();
-  const accepted = offerStatus === 'accepted';
-  const retirementDate = shop.retireDate;
-  const candidate = CANDIDATES.find((person) => person.id === selectedCandidateId) ?? CANDIDATES[0];
-  const schedule = retirementDate ? buildSchedule(retirementDate, shop.trainingMonths) : null;
-  const insufficientTime = schedule && schedule.checklistDue < acceptedDate;
+function itemDate({ code, startDate, endDate }: Schedule['items'][number]) {
+  if (startDate && startDate !== endDate) return `${formatKoreanDate(startDate)} ~ ${formatKoreanDate(endDate)}`;
+  return code === 'CHECKLIST' || code === 'PLAN' ? `~ ${formatKoreanDate(endDate)}` : formatKoreanDate(endDate);
+}
 
-  const currentStep = accepted ? CURRENT_STEP[status] : -1;
-  const stepState = (index: number) => (index < currentStep ? 'done' : index === currentStep ? 'current' : 'upcoming');
-  const steps: { date: string; title: string; description?: string }[] = schedule && retirementDate ? [
-    { date: accepted ? formatKoreanDate(acceptedDate) : '제안을 수락하면 시작해요', title: '제안 수락' },
-    { date: `~ ${formatKoreanDate(schedule.checklistDue)}`, title: '체크리스트 확인', description: '건물주 동의, 채무, 자금, 근로계약' },
-    { date: `~ ${formatKoreanDate(schedule.planDue)}`, title: 'AI 승계 계획 동의 · 계약금', description: '인수 금액의 10%' },
-    { date: `${formatKoreanDate(schedule.trainingStart)} ~ ${formatKoreanDate(schedule.trainingEnd)}`, title: `수습 ${shop.trainingMonths}개월`, description: `${shop.workHours} · 단계마다 사장님 승인` },
-    { date: formatKoreanDate(schedule.handoverStart), title: '운영권 넘겨받기 시작', description: '정한 근무 조건에 맞춰 운영을 이어받아요' },
-    { date: formatKoreanDate(retirementDate), title: '잔금 납입 · 승계 완료' },
-  ] : [];
-  const timeline = steps.map((step, index) => ({
-    ...step,
-    state: accepted && index === 0 ? 'done' : stepState(index),
-    date: stepState(index) === 'current' && accepted ? `${step.date} · 지금 단계` : step.date,
-  }));
+export default function SchedulePage() {
+  const { me } = useApp();
+  const [isRequestOpen, setIsRequestOpen] = useState(false);
+  const [newDate, setNewDate] = useState('');
+  const [reason, setReason] = useState('');
+  const { busy, error: actionError, run } = useAction();
+
+  const { data, error, loading, reload } = useLoad(async () => {
+    const summary = await orNull(api.currentSuccession());
+    return summary ? { summary, schedule: await api.schedule(summary.id) } : { summary: null, schedule: null };
+  }, [me?.id]);
+
+  if (loading || error || !data) {
+    return (
+      <FlowLayout title="승계 가일정" backTo="/succession/home" className="schedule-page">
+        <LoadStatus error={error} onRetry={() => void reload()} />
+      </FlowLayout>
+    );
+  }
+
+  const { summary, schedule } = data;
+  if (!summary || !schedule) {
+    return (
+      <FlowLayout title="승계 가일정" backTo="/offers/current" className="schedule-page">
+        <h1 className="flow-title">제안을 수락하면<br />가일정이 만들어져요</h1>
+        <p className="flow-desc">은퇴 희망일에서 거꾸로 승계 일정을 계산해 드려요.</p>
+        <Link to="/offers/current" className="btn btn-primary block succ-empty-action">제안 보기</Link>
+      </FlowLayout>
+    );
+  }
+
+  const pending = schedule.changeRequests.find((request) => request.status === 'PENDING');
+  const canRequest = summary.status !== 'COMPLETED' && !pending;
+
+  const submitRequest = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    void run(async () => {
+      await api.requestScheduleChange(summary.id, newDate, reason.trim() || null);
+      setIsRequestOpen(false);
+      setReason('');
+      await reload();
+    });
+  };
+
+  const answer = (requestId: number, value: 'approve' | 'reject') => {
+    void run(async () => {
+      await api.answerScheduleChange(summary.id, requestId, value);
+      await reload();
+    });
+  };
 
   return (
     <FlowLayout
       title="승계 가일정"
-      backTo={accepted ? '/succession/home' : '/offers/current'}
+      backTo="/succession/home"
       className="schedule-page"
-      footer={accepted && retirementDate ? (
-        <Link to={NEXT_LINK[status].to} className="btn btn-primary block">{NEXT_LINK[status].label}</Link>
-      ) : undefined}
+      footer={<Link to={NEXT_LINK[summary.status].to} className="btn btn-primary block">{NEXT_LINK[summary.status].label}</Link>}
     >
       <h1 className="flow-title">은퇴 희망일에서<br />거꾸로 계산했어요</h1>
-      <p className="flow-desc">{shop.name} · {shop.owner ? `${shop.owner} 사장님` : '사장님'} → {candidate.name} 님</p>
+      <p className="flow-desc">{summary.shopName} · {summary.ownerName} 사장님 → {summary.youthName} 님</p>
 
-      {retirementDate && schedule ? (
-        <>
-          <div className="schedule-summary">
-            <div><span>은퇴 희망일 · 승계 완료</span><strong>{formatKoreanDate(retirementDate)}</strong></div>
-            <div className="schedule-countdown"><span>오늘부터</span><strong>{daysUntil(retirementDate)}일</strong></div>
-          </div>
+      <div className="schedule-summary">
+        <div><span>은퇴 희망일 · 승계 완료</span><strong>{formatKoreanDate(schedule.retireDate)}</strong></div>
+        <div className="schedule-countdown"><span>오늘부터</span><strong>{schedule.daysLeft}일</strong></div>
+      </div>
 
-          {insufficientTime && <p className="flow-note schedule-warning">준비 기간이 짧아 일부 일정이 지났어요. 두 사람이 은퇴 희망일과 수습 기간을 함께 조율해 주세요.</p>}
+      {schedule.warnings.map((warning) => <p key={warning} className="flow-note schedule-warning">{warning}</p>)}
 
-          <ol className="schedule-timeline" aria-label="승계 단계별 가일정">
-            {timeline.map((step) => (
-              <li className={`schedule-stage is-${step.state}`} key={step.title} aria-current={step.state === 'current' ? 'step' : undefined}>
-                <span className="schedule-stage-date">{step.date}</span>
-                <h2>{step.title}</h2>
-                {step.description && <p>{step.description}</p>}
-              </li>
-            ))}
-          </ol>
+      <ol className="schedule-timeline" aria-label="승계 단계별 가일정">
+        {schedule.items.map((item) => (
+          <li className={`schedule-stage is-${item.state === 'DONE' ? 'done' : item.state === 'NOW' ? 'current' : 'upcoming'}`} key={item.seq} aria-current={item.state === 'NOW' ? 'step' : undefined}>
+            <span className="schedule-stage-date">{itemDate(item)}{item.state === 'NOW' ? ' · 지금 단계' : ''}</span>
+            <h2>{item.title}</h2>
+            {item.note && <p>{item.note}</p>}
+          </li>
+        ))}
+      </ol>
 
-          <p className="flow-note schedule-note">예시 가일정이에요.</p>
-        </>
-      ) : (
-        <div className="flow-note schedule-note">
-          <p>은퇴 희망일을 정하면 승계 일정을 계산해 드려요.</p>
-          <Link to="/owner/register" className="schedule-date-link">은퇴 희망일 정하기</Link>
+      <p className="flow-note schedule-note">가일정이에요. 바꾸려면 상대방의 동의가 필요해요.</p>
+
+      {pending && (
+        <div className="flow-note schedule-request-status" role="status">
+          <strong>은퇴 희망일을 {formatKoreanDate(pending.newRetireDate)}로 바꾸자는 요청이 있어요.</strong>
+          {pending.reason && <span>{pending.reason}</span>}
+          {pending.mine ? <span>상대방의 답을 기다리고 있어요.</span> : (
+            <div className="schedule-request-actions">
+              <button type="button" className="succ-small-btn" disabled={busy} onClick={() => answer(pending.id, 'reject')}>거절</button>
+              <button type="button" className="succ-small-btn is-primary" disabled={busy} onClick={() => answer(pending.id, 'approve')}>승인</button>
+            </div>
+          )}
         </div>
       )}
+      <ActionError message={actionError} />
+      {canRequest && (
+        <button
+          type="button"
+          className="btn btn-outline block schedule-request-open"
+          onClick={() => {
+            setNewDate(schedule.retireDate);
+            setIsRequestOpen(true);
+          }}
+        >
+          일정 바꾸자고 요청하기
+        </button>
+      )}
+      <TestRoleSwitch summary={summary} />
+
+      <FlowDialog open={isRequestOpen} title="은퇴 희망일 변경 요청" onClose={() => setIsRequestOpen(false)}>
+        <p>원하는 날짜를 골라 주세요. 상대방이 동의한 뒤에 일정이 바뀌어요.</p>
+        <form onSubmit={submitRequest}>
+          <label className="flow-label schedule-request-label" htmlFor="schedule-request-date">변경할 은퇴 희망일</label>
+          <input id="schedule-request-date" className="flow-input" type="date" value={newDate} min={addDays(todayISO(), 1)} required onChange={(event) => setNewDate(event.target.value)} />
+          <label className="flow-label schedule-request-label" htmlFor="schedule-request-reason">이유 (선택)</label>
+          <input id="schedule-request-reason" className="flow-input" type="text" value={reason} maxLength={300} onChange={(event) => setReason(event.target.value)} />
+          <div className="flow-dialog-actions">
+            <button type="button" className="btn btn-gray" onClick={() => setIsRequestOpen(false)}>취소</button>
+            <button type="submit" className="btn btn-primary" disabled={busy || newDate === schedule.retireDate}>변경 요청하기</button>
+          </div>
+        </form>
+      </FlowDialog>
     </FlowLayout>
   );
 }

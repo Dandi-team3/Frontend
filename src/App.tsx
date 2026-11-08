@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import LoginPage from './pages/LoginPage';
 import RolePage from './pages/RolePage';
@@ -15,8 +16,7 @@ import PlanPage from './pages/PlanPage';
 import RoadmapPage from './pages/RoadmapPage';
 import SuccessionHomePage from './pages/SuccessionHomePage';
 import PaymentsPage from './pages/PaymentsPage';
-import { DemoProvider } from './state/DemoContext';
-import { SuccessionProvider } from './state/SuccessionContext';
+import { AppProvider, useApp } from './state/AppContext';
 import MainLayout from './components/MainLayout';
 import HomePage from './pages/HomePage';
 import ShopExplorePage from './pages/ShopExplorePage';
@@ -28,10 +28,14 @@ import PersonalInfoPage from './pages/PersonalInfoPage';
 import OnboardingProfilePage from './pages/OnboardingProfilePage';
 import PolicyPage from './pages/PolicyPage';
 
+function RequireLogin({ children }: { children: ReactNode }) {
+  const { me } = useApp();
+  return me ? children : <Navigate to="/role" replace />;
+}
+
 export default function App() {
   return (
-    <DemoProvider>
-      <SuccessionProvider>
+    <AppProvider>
         <Routes>
           <Route path="/" element={<LoginPage />} />
           <Route path="/role" element={<RolePage />} />
@@ -46,23 +50,22 @@ export default function App() {
             <Route path="/my/profile" element={<PersonalInfoPage />} />
             <Route path="/my/:document" element={<PolicyPage />} />
           </Route>
-          <Route path="/owner" element={<OwnerHomePage />} />
-          <Route path="/successor" element={<SuccessorHomePage />} />
-          <Route path="/owner/register" element={<RetirementPage />} />
-          <Route path="/owner/shop" element={<OwnerShopPage />} />
-          <Route path="/owner/terms" element={<OwnerTermsPage />} />
-          <Route path="/successor/register" element={<YouthRegistrationPage />} />
-          <Route path="/owner/matches" element={<MatchingPage />} />
-          <Route path="/offers/current" element={<OfferPage />} />
-          <Route path="/succession/home" element={<SuccessionHomePage />} />
-          <Route path="/succession/schedule" element={<SchedulePage />} />
-          <Route path="/succession/checklist" element={<ChecklistPage />} />
-          <Route path="/succession/plan" element={<PlanPage />} />
-          <Route path="/succession/roadmap" element={<RoadmapPage />} />
-          <Route path="/succession/payments" element={<PaymentsPage />} />
+          <Route path="/owner" element={<RequireLogin><OwnerHomePage /></RequireLogin>} />
+          <Route path="/successor" element={<RequireLogin><SuccessorHomePage /></RequireLogin>} />
+          <Route path="/owner/register" element={<RequireLogin><RetirementPage /></RequireLogin>} />
+          <Route path="/owner/shop" element={<RequireLogin><OwnerShopPage /></RequireLogin>} />
+          <Route path="/owner/terms" element={<RequireLogin><OwnerTermsPage /></RequireLogin>} />
+          <Route path="/successor/register" element={<RequireLogin><YouthRegistrationPage /></RequireLogin>} />
+          <Route path="/owner/matches" element={<RequireLogin><MatchingPage /></RequireLogin>} />
+          <Route path="/offers/current" element={<RequireLogin><OfferPage /></RequireLogin>} />
+          <Route path="/succession/home" element={<RequireLogin><SuccessionHomePage /></RequireLogin>} />
+          <Route path="/succession/schedule" element={<RequireLogin><SchedulePage /></RequireLogin>} />
+          <Route path="/succession/checklist" element={<RequireLogin><ChecklistPage /></RequireLogin>} />
+          <Route path="/succession/plan" element={<RequireLogin><PlanPage /></RequireLogin>} />
+          <Route path="/succession/roadmap" element={<RequireLogin><RoadmapPage /></RequireLogin>} />
+          <Route path="/succession/payments" element={<RequireLogin><PaymentsPage /></RequireLogin>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
-      </SuccessionProvider>
-    </DemoProvider>
+    </AppProvider>
   );
 }

@@ -2,13 +2,13 @@ import { useState, type FormEvent } from 'react';
 import ShopCard from '../components/ShopCard';
 import { SHOPS } from '../data/shops';
 import { SHOP_CATEGORIES } from '../lib/shop';
-import { useDemo } from '../state/DemoContext';
+import { useApp } from '../state/AppContext';
 import './ShopExplorePage.css';
 
 const CATEGORIES = ['전체', ...SHOP_CATEGORIES];
 
 export default function ShopExplorePage() {
-  const { role } = useDemo();
+  const { role } = useApp();
   const isOwner = role === 'owner';
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState('전체');

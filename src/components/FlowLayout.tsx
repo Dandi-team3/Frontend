@@ -1,7 +1,7 @@
 import { useEffect, type ReactNode } from 'react';
 import { Link, Navigate, useLocation } from 'react-router-dom';
 import BottomNav from './BottomNav';
-import { hasRequiredPersonalInfo, useDemo } from '../state/DemoContext';
+import { hasRequiredPersonalInfo, useApp } from '../state/AppContext';
 import '../styles/flow.css';
 
 type FlowLayoutProps = {
@@ -15,14 +15,16 @@ type FlowLayoutProps = {
 
 export default function FlowLayout({ title, backTo, progress, children, footer, className = '' }: FlowLayoutProps) {
   const { pathname } = useLocation();
-  const { role, onboardingComplete, personalInfo } = useDemo();
+  const { me, role: accountRole, pendingRole, onboardingComplete, personalInfo } = useApp();
+  const role = pathname === '/onboarding/profile' ? pendingRole : accountRole ?? pendingRole;
   const showTabs = pathname.startsWith('/succession/') || pathname.startsWith('/offers/') || pathname === '/owner/matches';
   useEffect(() => {
     document.title = `${title} | 물려받기`;
     window.scrollTo(0, 0);
   }, [title]);
 
-  if (showTabs && (!onboardingComplete[role] || !hasRequiredPersonalInfo(personalInfo))) {
+  if (showTabs && !me) return <Navigate to="/role" replace />;
+  if (showTabs && (!onboardingComplete[role] || !hasRequiredPersonalInfo(personalInfo, role))) {
     return <Navigate to="/onboarding/profile" replace />;
   }
 

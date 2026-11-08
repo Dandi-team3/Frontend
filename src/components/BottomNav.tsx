@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { useDemo } from '../state/DemoContext';
+import { useApp } from '../state/AppContext';
 import './BottomNav.css';
 
 type Tab = 'home' | 'shops' | 'matching' | 'education' | 'my';
@@ -39,7 +39,7 @@ function TabIcon({ tab, isOwner }: { tab: Tab; isOwner: boolean }) {
 
 export default function BottomNav() {
   const { pathname } = useLocation();
-  const { role } = useDemo();
+  const { role } = useApp();
   const isOwner = role === 'owner';
   const currentTab = getCurrentTab(pathname);
 

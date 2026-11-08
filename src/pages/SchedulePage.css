@@ -22,3 +22,9 @@
   .schedule-summary strong { font-size: 22px; }
   .schedule-summary .schedule-countdown { flex-direction: row; align-items: baseline; gap: 10px; }
 }
+.schedule-request-status { display: flex; flex-direction: column; gap: 6px; margin-top: 16px; }
+.schedule-request-status strong { color: var(--navy); }
+.schedule-request-actions { display: flex; gap: 8px; margin-top: 8px; }
+.schedule-request-actions > * { flex: 1; }
+.schedule-request-label { margin-top: 16px; }
+.schedule-request-open { margin-top: 16px; }

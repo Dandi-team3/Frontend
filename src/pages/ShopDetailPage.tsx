@@ -1,13 +1,13 @@
 import { Link, useParams } from 'react-router-dom';
 import { getShopById } from '../data/shops';
 import { formatKoreanDate } from '../lib/dates';
-import { useDemo } from '../state/DemoContext';
+import { useApp } from '../state/AppContext';
 import ShopCatalogPhoto from '../components/ShopCatalogPhoto';
 import './ShopDetailPage.css';
 
 export default function ShopDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const { role } = useDemo();
+  const { role } = useApp();
   const isOwner = role === 'owner';
   const shop = id ? getShopById(id) : undefined;
 

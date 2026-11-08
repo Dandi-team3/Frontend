@@ -1,12 +1,13 @@
 import { useEffect } from 'react';
 import { Link, Navigate, Outlet, useLocation } from 'react-router-dom';
-import { hasRequiredPersonalInfo, useDemo } from '../state/DemoContext';
+import { hasRequiredPersonalInfo, useApp } from '../state/AppContext';
 import BottomNav from './BottomNav';
 import Logo from './Logo';
 import './MainLayout.css';
 
 export default function MainLayout() {
-  const { role, onboardingComplete, personalInfo } = useDemo();
+  const { me, role: accountRole, pendingRole, onboardingComplete, personalInfo } = useApp();
+  const role = accountRole ?? pendingRole;
   const { pathname } = useLocation();
   const roleLabel = role === 'owner' ? '사장님' : '청년';
 
@@ -15,7 +16,8 @@ export default function MainLayout() {
   }, [pathname]);
 
   const isServiceInfo = ['/my/terms', '/my/privacy', '/my/about'].includes(pathname);
-  if ((!onboardingComplete[role] || !hasRequiredPersonalInfo(personalInfo)) && !isServiceInfo) {
+  if (!me && !isServiceInfo) return <Navigate to="/role" replace />;
+  if ((!onboardingComplete[role] || !hasRequiredPersonalInfo(personalInfo, role)) && !isServiceInfo) {
     return <Navigate to="/onboarding/profile" replace />;
   }
 

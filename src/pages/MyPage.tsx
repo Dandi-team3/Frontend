@@ -1,6 +1,7 @@
 import { Link, useLocation } from 'react-router-dom';
-import { validateShopDraft } from '../lib/shop';
-import { useDemo } from '../state/DemoContext';
+import { api } from '../lib/api';
+import { useLoad } from '../lib/useApi';
+import { useApp, useShopDraftLoader } from '../state/AppContext';
 import './MyPage.css';
 
 type MenuIcon = 'person' | 'shop' | 'conditions' | 'offer';
@@ -25,27 +26,23 @@ function MenuArrow() {
 }
 
 export default function MyPage() {
-  const { role, personalInfo, shop, shopDraft, youthProfile, offerStatus } = useDemo();
+  const { me, role, personalInfo, shopDraft } = useApp();
+  useShopDraftLoader();
+  const { data: offers, error, loading, reload } = useLoad(api.offers, [me?.id]);
+  const offerStatus = me?.successionId ? 'accepted' : offers?.some((offer) => offer.status === 'PROPOSED') ? 'sent' : 'idle';
   const location = useLocation();
   const locationState: unknown = location.state;
   const notice = locationState && typeof locationState === 'object' && 'notice' in locationState && typeof locationState.notice === 'string'
     ? locationState.notice
     : null;
   const isOwner = role === 'owner';
-  const name = personalInfo.name.trim() || (isOwner ? shopDraft.ownerName.trim() : '');
+  const name = me?.name || personalInfo.name.trim();
   const age = personalInfo.age.trim();
-  const shopIssue = validateShopDraft(shopDraft, shop.retireDate);
-  const shopReady = shopIssue === null;
-  const youthReady = Boolean(
-    youthProfile.experience.trim()
-    && youthProfile.loanPlan
-    && /^\d+$/.test(youthProfile.funds)
-    && youthProfile.industries.length
-    && youthProfile.regions.length,
-  );
+  const shopReady = Boolean(me?.hasShop);
+  const youthReady = Boolean(me?.hasYouthProfile);
   const ready = isOwner ? shopReady : youthReady;
   const statusLabel = isOwner
-    ? (ready ? '가게 정보 입력 완료' : shopIssue?.to === '/owner/register' ? '은퇴 희망일을 나중에 정할 수 있어요' : '가게 정보 입력 중')
+    ? (ready ? '가게 정보 입력 완료' : '가게 정보 입력 중')
     : (ready ? '매칭 조건 입력 완료' : '매칭 조건 입력 중');
   const offerDescription = offerStatus === 'accepted'
     ? '수락한 제안과 진행 상황을 봐요'
@@ -53,7 +50,7 @@ export default function MyPage() {
       ? '청년의 답변을 기다리고 있어요'
       : isOwner ? '청년에게 보낸 제안을 확인해요' : '사장님이 보낸 제안을 확인해요';
   const items: { to: string; title: string; description: string; icon: MenuIcon }[] = [
-    { to: '/my/profile', title: '내 정보', description: '이름과 나이, 연락처를 바꿔요', icon: 'person' },
+    { to: '/my/profile', title: '내 정보', description: '이름과 나이, 연락처를 확인해요', icon: 'person' },
     isOwner
       ? { to: '/owner/shop', title: '내 가게', description: shopDraft.name.trim() || '가게와 물려줄 내용을 적어요', icon: 'shop' }
       : { to: '/successor/register', title: '매칭 조건', description: '경력과 희망하는 가게를 알려 주세요', icon: 'conditions' },
@@ -63,6 +60,8 @@ export default function MyPage() {
   return (
     <div className={`my-page${isOwner ? ' my-page-owner' : ''}`}>
       {notice && <p className="my-page-notice" role="status">{notice}</p>}
+      {loading && <p role="status">제안을 불러오고 있어요.</p>}
+      {error && <p role="alert">{error} <button type="button" onClick={() => void reload()}>다시 시도</button></p>}
 
       <header className="my-page-heading">
         <h1>{isOwner ? '사장님, 안녕하세요' : '나의 물려받기'}</h1>

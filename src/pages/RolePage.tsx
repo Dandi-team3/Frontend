@@ -1,8 +1,7 @@
 import { useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Logo from '../components/Logo';
-import { devLogin, isApiEnabled } from '../lib/api';
-import { useDemo } from '../state/DemoContext';
+import { hasRequiredPersonalInfo, useApp } from '../state/AppContext';
 import './RolePage.css';
 
 type Role = 'owner' | 'successor';
@@ -45,29 +44,15 @@ const ROLES: { id: Role; icon: ReactNode; title: string; desc: string }[] = [
 
 export default function RolePage() {
   const navigate = useNavigate();
-  const { setRole: saveRole, onboardingComplete } = useDemo();
+  const { setPendingRole, me, personalInfo, onboardingComplete } = useApp();
   const [role, setRole] = useState<Role | null>(null);
 
-  const [isSaving, setIsSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const handleNext = async () => {
+  const handleNext = () => {
     if (!role) return;
-    if (isApiEnabled) {
-      setIsSaving(true);
-      setError(null);
-      try {
-        // 로그인 화면 연동 전까지는 백엔드 데모 시드 계정으로 개발용 로그인을 한다.
-        await devLogin(role === 'owner' ? '김순자' : '이도윤', role === 'owner' ? 'OWNER' : 'YOUTH');
-      } catch (cause) {
-        setError(cause instanceof Error ? cause.message : '요청을 처리하지 못했어요.');
-        return;
-      } finally {
-        setIsSaving(false);
-      }
-    }
-    saveRole(role);
-    navigate(onboardingComplete[role] ? '/home' : '/onboarding/profile', { replace: true });
+    setPendingRole(role);
+    const currentRole = me?.role === 'OWNER' ? 'owner' : me?.role === 'YOUTH' ? 'successor' : null;
+    navigate(currentRole === role && onboardingComplete[role] && hasRequiredPersonalInfo(personalInfo, role)
+      ? '/home' : '/onboarding/profile');
   };
 
   return (
@@ -110,8 +95,7 @@ export default function RolePage() {
 
         <div className="spacer" />
 
-        {error && <p className="role-error" role="alert">{error}</p>}
-        <button type="button" className="btn btn-primary block" disabled={!role || isSaving} onClick={handleNext}>
+        <button type="button" className="btn btn-primary block" disabled={!role} onClick={handleNext}>
           다음
         </button>
       </main>

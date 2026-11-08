@@ -1,7 +1,9 @@
 import { Link } from 'react-router-dom';
 import ShopCard from '../components/ShopCard';
 import { SHOPS } from '../data/shops';
-import { useDemo } from '../state/DemoContext';
+import { useApp, useShopDraftLoader } from '../state/AppContext';
+import { api } from '../lib/api';
+import { useLoad } from '../lib/useApi';
 import './HomePage.css';
 
 const SERVICE_STEPS = [
@@ -66,14 +68,17 @@ function SuccessorHomeContent() {
 }
 
 function OwnerHomeContent() {
-  const { shopDraft, offerStatus } = useDemo();
+  const { me, shopDraft } = useApp();
+  useShopDraftLoader();
+  const { data: offers } = useLoad(api.offers, [me?.id]);
+  const offerStatus = me?.successionId ? 'accepted' : offers?.some((offer) => offer.status === 'PROPOSED') ? 'sent' : 'idle';
   const shopName = shopDraft.name.trim();
   const askingPrice = Number(shopDraft.askingPrice);
 
   return (
     <div className="service-home home-owner-page">
       <header className="home-owner-intro">
-        <h1>{shopDraft.ownerName.trim() || '사장님'}{shopDraft.ownerName.trim() ? ' 사장님,' : ','}<br />함께할 청년을 찾아봐요</h1>
+        <h1>{me?.name ? `${me.name} 사장님,` : '사장님,'}<br />함께할 청년을 찾아봐요</h1>
         <p>가게를 이어갈 청년을 살펴보고,<br />마음에 드는 분에게 제안해 보세요.</p>
       </header>
 
@@ -112,6 +117,6 @@ function OwnerHomeContent() {
 }
 
 export default function HomePage() {
-  const { role } = useDemo();
+  const { role } = useApp();
   return role === 'owner' ? <OwnerHomeContent /> : <SuccessorHomeContent />;
 }

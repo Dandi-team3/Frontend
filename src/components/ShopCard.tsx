@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import type { ListedShop } from '../data/shops';
-import { useDemo } from '../state/DemoContext';
+import { useApp } from '../state/AppContext';
 import ShopCatalogPhoto from './ShopCatalogPhoto';
 import './ShopCard.css';
 
@@ -10,7 +10,7 @@ type ShopCardProps = {
 };
 
 export default function ShopCard({ shop, showMatch = false }: ShopCardProps) {
-  const { role } = useDemo();
+  const { role } = useApp();
   const isOwner = role === 'owner';
   const { details } = shop;
   const description = [details.district, details.category, details.openedYear ? `${details.openedYear}년부터` : ''].filter(Boolean).join(' · ');

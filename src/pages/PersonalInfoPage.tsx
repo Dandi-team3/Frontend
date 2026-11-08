@@ -1,11 +1,25 @@
 import { useRef, useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useDemo } from '../state/DemoContext';
+import { useApp } from '../state/AppContext';
+import { api, type YouthProfileRequest, type YouthProfileResponse } from '../lib/api';
+import { useAction } from '../lib/useApi';
 import './PersonalInfoPage.css';
 
+
+function profileWithAge(profile: YouthProfileResponse, age: number): YouthProfileRequest {
+  return {
+    age, experience: profile.experience, experienceDetail: profile.experienceDetail,
+    fundsReady: profile.fundsReady, loanPlanned: profile.loanPlanned, loanAmount: profile.loanAmount,
+    preferredCategories: profile.preferredCategories, preferredDistricts: profile.preferredDistricts,
+    earlyMorningOk: profile.earlyMorningOk, intro: profile.intro,
+  };
+}
+
 export default function PersonalInfoPage() {
-  const { role, personalInfo, setPersonalInfo, shopDraft, setShopDraft } = useDemo();
-  const [values, setValues] = useState({ ...personalInfo, name: personalInfo.name || (role === 'owner' ? shopDraft.ownerName : '') });
+  const { role, me, personalInfo, setPersonalInfo } = useApp();
+  const [values, setValues] = useState({ ...personalInfo, name: me?.name ?? personalInfo.name });
+  const { busy, error, run } = useAction();
+  const maxAge = role === 'owner' ? 100 : 80;
   const nameInput = useRef<HTMLInputElement>(null);
   const ageInput = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
@@ -19,14 +33,19 @@ export default function PersonalInfoPage() {
       return;
     }
     const age = Number(values.age);
-    if (!/^\d{1,3}$/.test(values.age) || !Number.isInteger(age) || age < 15 || age > 100) {
-      ageInput.current?.setCustomValidity('나이는 15세부터 100세 사이로 적어 주세요.');
+    if (!/^\d{1,3}$/.test(values.age) || !Number.isInteger(age) || age < 15 || age > maxAge) {
+      ageInput.current?.setCustomValidity(`나이는 15세부터 ${maxAge}세 사이로 적어 주세요.`);
       ageInput.current?.reportValidity();
       return;
     }
-    setPersonalInfo({ name, age: String(age), phone: values.phone.trim(), email: values.email.trim() });
-    if (role === 'owner') setShopDraft({ ...shopDraft, ownerName: name });
-    navigate('/my', { state: { notice: '내 정보를 저장했어요' } });
+    void run(async () => {
+      if (role === 'successor' && me?.hasYouthProfile) {
+        const profile = await api.youthProfile();
+        await api.saveYouthProfile(profileWithAge(profile, age));
+      }
+      setPersonalInfo({ name: me?.name ?? name, age: String(age), phone: values.phone.trim(), email: values.email.trim() });
+      navigate('/my', { state: { notice: '내 정보를 저장했어요' } });
+    });
   };
 
   return (
@@ -56,11 +75,10 @@ export default function PersonalInfoPage() {
             maxLength={50}
             placeholder="이름을 입력해 주세요"
             required
-            onChange={(event) => {
-              event.currentTarget.setCustomValidity('');
-              setValues({ ...values, name: event.currentTarget.value });
-            }}
+            readOnly
+            aria-describedby="personal-name-note"
           />
+          <p id="personal-name-note" className="personal-info-note">이름은 로그인할 때 사용한 이름이에요.</p>
         </div>
 
         <div className="personal-info-field">
@@ -73,7 +91,7 @@ export default function PersonalInfoPage() {
               type="number"
               inputMode="numeric"
               min={15}
-              max={100}
+              max={maxAge}
               step={1}
               value={values.age}
               placeholder="나이를 입력해 주세요"
@@ -117,8 +135,9 @@ export default function PersonalInfoPage() {
           />
         </div>
 
-        <p className="personal-info-note">이름과 나이는 꼭 적어 주세요.<br />연락처는 나중에 적어도 돼요.</p>
-        <button type="submit" className="btn btn-primary block personal-info-save">저장하기</button>
+        <p className="personal-info-note">{role === 'owner' ? '나이와 연락처는 이 브라우저에서만 보관해요.' : '연락처는 이 브라우저에서만 보관해요.'}</p>
+        {error && <p className="flow-error" role="alert">{error}</p>}
+        <button type="submit" className="btn btn-primary block personal-info-save" disabled={busy}>{busy ? '저장하고 있어요' : '저장하기'}</button>
       </form>
     </div>
   );

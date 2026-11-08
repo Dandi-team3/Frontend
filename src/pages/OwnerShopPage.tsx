@@ -5,11 +5,10 @@ import FlowLayout from '../components/FlowLayout';
 import ShopPhotoPicker from '../components/ShopPhotoPicker';
 import type { PostcodeResult } from '../lib/postcode';
 import { SHOP_CATEGORIES, type ShopDraft } from '../lib/shop';
-import { useDemo } from '../state/DemoContext';
+import { useApp, useShopDraftLoader } from '../state/AppContext';
 import './OwnerShopPage.css';
 
 const REQUIRED_FIELDS = [
-  { key: 'ownerName', message: '사장님 이름을 입력해 주세요.' },
   { key: 'name', message: '가게 이름을 입력해 주세요.' },
   { key: 'district', message: '가게가 있는 지역을 입력해 주세요.' },
 ] as const;
@@ -19,7 +18,8 @@ export default function OwnerShopPage() {
   const [searchParams] = useSearchParams();
   const isOnboarding = searchParams.get('onboarding') === '1';
   const suffix = isOnboarding ? '?onboarding=1' : '';
-  const { shopDraft, setShopDraft, shopPhotos, setShopPhotos, setRole, personalInfo, setPersonalInfo } = useDemo();
+  const { me, shopDraft, setShopDraft, shopPhotos, setShopPhotos } = useApp();
+  useShopDraftLoader();
 
   const [searchOpen, setSearchOpen] = useState(false);
   const districtInput = useRef<HTMLInputElement>(null);
@@ -37,15 +37,8 @@ export default function OwnerShopPage() {
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const form = event.currentTarget;
-    const ownerName = isOnboarding ? personalInfo.name.trim() : shopDraft.ownerName.trim();
-
-    if (isOnboarding && !ownerName) {
-      navigate('/onboarding/profile', { replace: true });
-      return;
-    }
 
     for (const { key, message } of REQUIRED_FIELDS) {
-      if (isOnboarding && key === 'ownerName') continue;
       const input = form.elements.namedItem(key);
       if (input instanceof HTMLInputElement && !shopDraft[key].trim()) {
         input.setCustomValidity(message);
@@ -56,14 +49,11 @@ export default function OwnerShopPage() {
 
     setShopDraft({
       ...shopDraft,
-      ownerName,
       name: shopDraft.name.trim(),
       district: shopDraft.district.trim(),
       mainMenu: shopDraft.mainMenu.trim(),
       address: shopDraft.address.trim(),
     });
-    setPersonalInfo({ ...personalInfo, name: ownerName });
-    setRole('owner');
     navigate(`/owner/terms${suffix}`);
   };
 
@@ -85,21 +75,7 @@ export default function OwnerShopPage() {
       <form id="owner-shop-form" className="owner-shop-form" onSubmit={handleSubmit}>
         {!isOnboarding && <div className="owner-shop-field">
           <label className="flow-label" htmlFor="owner-name">사장님 이름</label>
-          <input
-            id="owner-name"
-            name="ownerName"
-            className="flow-input"
-            type="text"
-            autoComplete="name"
-            value={shopDraft.ownerName}
-            maxLength={50}
-            placeholder="성함을 입력해 주세요"
-            required
-            onChange={(event) => {
-              event.currentTarget.setCustomValidity('');
-              updateField('ownerName', event.currentTarget.value);
-            }}
-          />
+          <input id="owner-name" className="flow-input" type="text" value={me?.name ?? ''} readOnly />
         </div>}
 
         <div className="owner-shop-field">

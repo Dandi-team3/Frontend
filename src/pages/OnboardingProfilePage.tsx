@@ -1,24 +1,31 @@
 import { useRef, useState, type FormEvent } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import FlowLayout from '../components/FlowLayout';
-import { hasRequiredPersonalInfo, useDemo } from '../state/DemoContext';
+import { hasRequiredPersonalInfo, useApp } from '../state/AppContext';
+import { useAction } from '../lib/useApi';
+import { api } from '../lib/api';
 import './OnboardingProfilePage.css';
 
 export default function OnboardingProfilePage() {
   const navigate = useNavigate();
-  const { role, personalInfo, setPersonalInfo, shopDraft, setShopDraft, onboardingComplete } = useDemo();
-  const isOwner = role === 'owner';
+  const { me, pendingRole, personalInfo, setPersonalInfo, onboardingComplete, login, completeOnboarding } = useApp();
+  const isOwner = pendingRole === 'owner';
+  const maxAge = isOwner ? 100 : 80;
+  const [values, setValues] = useState(personalInfo);
+  const { busy, error, run } = useAction();
   const nameInput = useRef<HTMLInputElement>(null);
   const ageInput = useRef<HTMLInputElement>(null);
+  const submitted = useRef(false);
   const [nameError, setNameError] = useState('');
   const [ageError, setAgeError] = useState('');
 
-  if (onboardingComplete[role] && hasRequiredPersonalInfo(personalInfo)) return <Navigate to="/my/profile" replace />;
+  const currentRole = me?.role === 'OWNER' ? 'owner' : me?.role === 'YOUTH' ? 'successor' : null;
+  if (!submitted.current && !busy && !error && currentRole === pendingRole && onboardingComplete[pendingRole] && hasRequiredPersonalInfo(personalInfo, pendingRole)) return <Navigate to="/my/profile" replace />;
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const name = personalInfo.name.trim();
-    const age = personalInfo.age.trim();
+    const name = values.name.trim();
+    const age = values.age.trim();
     const ageNumber = Number(age);
 
     if (!name) {
@@ -28,17 +35,44 @@ export default function OnboardingProfilePage() {
       nameInput.current?.reportValidity();
       return;
     }
-    if (!/^\d+$/.test(age) || !Number.isInteger(ageNumber) || ageNumber < 15 || ageNumber > 100) {
-      const message = '나이를 15세부터 100세 사이의 정수로 적어 주세요.';
+    if (!/^\d+$/.test(age) || !Number.isInteger(ageNumber) || ageNumber < 15 || ageNumber > maxAge) {
+      const message = `나이를 15세부터 ${maxAge}세 사이의 정수로 적어 주세요.`;
       setAgeError(message);
       ageInput.current?.setCustomValidity(message);
       ageInput.current?.reportValidity();
       return;
     }
 
-    setPersonalInfo({ ...personalInfo, name, age: String(ageNumber), phone: personalInfo.phone.trim() });
-    if (isOwner) setShopDraft({ ...shopDraft, ownerName: name });
-    navigate(isOwner ? '/owner/shop?onboarding=1' : '/successor/register?onboarding=1');
+    // 계정 복원으로 상태가 바뀌어도 제출 결과의 이동 경로를 유지한다.
+    submitted.current = true;
+    void run(async () => {
+      const serverRole = isOwner ? 'OWNER' : 'YOUTH';
+      const next = me?.name === name && me.role === serverRole ? me : await login(name, serverRole);
+      if (next.role !== (isOwner ? 'OWNER' : 'YOUTH')) {
+        throw new Error('이 이름으로 등록한 역할이 달라요. 역할을 다시 골라 주세요.');
+      }
+      const info = { ...values, name: next.name, age: String(ageNumber), phone: values.phone.trim(), email: values.email.trim() };
+      const alreadyRegistered = isOwner ? next.hasShop : next.hasYouthProfile;
+      if (alreadyRegistered) {
+        if (!isOwner) {
+          const profile = await api.youthProfile();
+          if (profile.age !== ageNumber) {
+            await api.saveYouthProfile({
+              age: ageNumber, experience: profile.experience, experienceDetail: profile.experienceDetail,
+              fundsReady: profile.fundsReady, loanPlanned: profile.loanPlanned, loanAmount: profile.loanAmount,
+              preferredCategories: profile.preferredCategories, preferredDistricts: profile.preferredDistricts,
+              earlyMorningOk: profile.earlyMorningOk, intro: profile.intro,
+            });
+          }
+        }
+        setPersonalInfo(info);
+        completeOnboarding(pendingRole);
+        navigate('/home', { replace: true });
+      } else {
+        setPersonalInfo(info);
+        navigate(isOwner ? '/owner/shop?onboarding=1' : '/successor/register?onboarding=1');
+      }
+    });
   };
 
   return (
@@ -47,7 +81,7 @@ export default function OnboardingProfilePage() {
       backTo="/role"
       progress={{ current: 1, total: isOwner ? 4 : 2 }}
       className="onboarding-profile-page"
-      footer={<button type="submit" form="onboarding-profile-form" className="btn btn-primary block">다음</button>}
+      footer={<>{error && <p className="flow-error" role="alert">{error}</p>}<button type="submit" form="onboarding-profile-form" className="btn btn-primary block" disabled={busy}>{busy ? '확인하고 있어요' : '다음'}</button></>}
     >
       <h1 className="flow-title">{isOwner ? <>사장님,<br />반가워요</> : <>만나서<br />반가워요</>}</h1>
       <p className="flow-desc">먼저 이름과 나이를 알려 주세요.<br />연락처는 나중에 적어도 괜찮아요.</p>
@@ -61,7 +95,7 @@ export default function OnboardingProfilePage() {
             className="flow-input"
             type="text"
             autoComplete="name"
-            value={personalInfo.name}
+            value={values.name}
             maxLength={50}
             placeholder={isOwner ? '성함을 적어 주세요' : '이름을 적어 주세요'}
             required
@@ -71,7 +105,7 @@ export default function OnboardingProfilePage() {
             onChange={(event) => {
               event.currentTarget.setCustomValidity('');
               setNameError('');
-              setPersonalInfo({ ...personalInfo, name: event.currentTarget.value });
+              setValues({ ...values, name: event.currentTarget.value });
             }}
           />
           {nameError && <p id="onboarding-name-error" className="flow-error" role="alert">{nameError}</p>}
@@ -87,18 +121,18 @@ export default function OnboardingProfilePage() {
               type="number"
               inputMode="numeric"
               min={15}
-              max={100}
+              max={maxAge}
               step={1}
-              value={personalInfo.age}
+              value={values.age}
               placeholder="나이를 적어 주세요"
               required
               aria-invalid={Boolean(ageError) || undefined}
               aria-describedby={ageError ? 'onboarding-age-unit onboarding-age-error' : 'onboarding-age-unit'}
-              onInvalid={() => setAgeError('나이를 15세부터 100세 사이의 정수로 적어 주세요.')}
+              onInvalid={() => setAgeError(`나이를 15세부터 ${maxAge}세 사이의 정수로 적어 주세요.`)}
               onChange={(event) => {
                 event.currentTarget.setCustomValidity('');
                 setAgeError('');
-                setPersonalInfo({ ...personalInfo, age: event.currentTarget.value });
+                setValues({ ...values, age: event.currentTarget.value });
               }}
             />
             <span id="onboarding-age-unit" className="onboarding-age-unit">세</span>
@@ -114,10 +148,10 @@ export default function OnboardingProfilePage() {
             type="tel"
             inputMode="tel"
             autoComplete="tel"
-            value={personalInfo.phone}
+            value={values.phone}
             maxLength={30}
             placeholder="연락받을 번호를 적어 주세요"
-            onChange={(event) => setPersonalInfo({ ...personalInfo, phone: event.target.value })}
+            onChange={(event) => setValues({ ...values, phone: event.target.value })}
           />
         </div>
       </form>

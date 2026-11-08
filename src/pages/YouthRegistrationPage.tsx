@@ -1,14 +1,25 @@
-import { useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import FlowLayout from "../components/FlowLayout";
-import { useDemo } from "../state/DemoContext";
-import { getShopById } from '../data/shops';
+import { api, orNull, type Experience } from "../lib/api";
+import { useAction } from "../lib/useApi";
+import { hasRequiredPersonalInfo, useApp } from "../state/AppContext";
+import { getShopById } from "../data/shops";
 import "./RegistrationPages.css";
 
-const EXPERIENCES = ["없음", "1년 미만", "1~3년", "3년 이상"];
+const EXPERIENCES: { value: Experience; label: string }[] = [
+  { value: "NONE", label: "없음" },
+  { value: "UNDER_1Y", label: "1년 미만" },
+  { value: "ONE_TO_3Y", label: "1~3년" },
+  { value: "OVER_3Y", label: "3년 이상" },
+];
 const LOAN_PLANS = [
-  { value: "loan", label: "청년 창업 대출 알아보는 중" },
-  { value: "none", label: "대출 없이" },
+  { value: true, label: "청년 창업 대출 알아보는 중" },
+  { value: false, label: "대출 없이" },
+];
+const EARLY_MORNING = [
+  { value: true, label: "가능해요" },
+  { value: false, label: "어려워요" },
 ];
 const INDUSTRIES = ["한식", "양식", "중식", "일식", "카페"];
 const REGIONS = ["중구", "남구", "수성구", "북구"];
@@ -22,46 +33,80 @@ export default function YouthRegistrationPage() {
   const [searchParams] = useSearchParams();
   const isOnboarding = searchParams.get('onboarding') === '1';
   const selectedShop = getShopById(searchParams.get('shop') ?? '');
-  const returnTo = isOnboarding
-    ? '/home'
-    : searchParams.get('from') === 'matching'
-      ? `/matching${selectedShop ? `?shop=${encodeURIComponent(selectedShop.id)}` : ''}`
-      : '/my';
-  const { youthProfile, setYouthProfile, setRole, completeOnboarding } = useDemo();
+  const returnTo = isOnboarding ? '/home' : searchParams.get('from') === 'matching'
+    ? `/matching${selectedShop ? `?shop=${encodeURIComponent(selectedShop.id)}` : ''}` : '/my';
+  const { me, refreshMe, personalInfo, completeOnboarding, youthDraft: youthProfile,
+    setYouthDraft: setYouthProfile, youthDraftText, setYouthDraftText } = useApp();
+  const { funds: fundsText, loan: loanText } = youthDraftText;
+  const { busy, error, run } = useAction();
   const [invalidGroup, setInvalidGroup] = useState<
     "industries" | "regions" | null
   >(null);
   const industryInput = useRef<HTMLInputElement>(null);
   const regionInput = useRef<HTMLInputElement>(null);
 
-  const updateSelection = (field: "industries" | "regions", value: string) => {
+  // 이미 등록했으면 불러온다. 화면에 없는 값(나이, 소개 등)도 저장할 때 유지된다.
+  useEffect(() => {
+    if (!me?.hasYouthProfile) return;
+    let cancelled = false;
+    void orNull(api.youthProfile()).then((profile) => {
+      if (cancelled || !profile) return;
+      setYouthProfile(profile);
+      setYouthDraftText({ funds: String(profile.fundsReady), loan: profile.loanAmount ? String(profile.loanAmount) : "" });
+    }).catch(() => {
+      // 불러오지 못하면 새로 입력할 수 있게 둔다.
+    });
+    return () => { cancelled = true; };
+  }, [me]);
+
+  const updateSelection = (field: "preferredCategories" | "preferredDistricts", value: string) => {
     const current = youthProfile[field];
     const next = current.includes(value)
       ? current.filter((item) => item !== value)
       : [...current, value];
     setYouthProfile({ ...youthProfile, [field]: next });
-    if (invalidGroup === field && next.length > 0) setInvalidGroup(null);
+    if (next.length > 0 && invalidGroup === (field === "preferredCategories" ? "industries" : "regions")) setInvalidGroup(null);
   };
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (youthProfile.industries.length === 0) {
+    if (youthProfile.preferredCategories.length === 0) {
       setInvalidGroup("industries");
       industryInput.current?.focus();
       return;
     }
-    if (youthProfile.regions.length === 0) {
+    if (youthProfile.preferredDistricts.length === 0) {
       setInvalidGroup("regions");
       regionInput.current?.focus();
       return;
     }
-    setInvalidGroup(null);
-    setRole("successor");
-    if (isOnboarding && !completeOnboarding('successor')) {
+    if (isOnboarding && !hasRequiredPersonalInfo(personalInfo, 'successor')) {
       navigate('/onboarding/profile', { replace: true });
       return;
     }
-    navigate(returnTo, { replace: isOnboarding, state: { notice: '매칭 조건을 저장했어요.' } });
+    setInvalidGroup(null);
+    void run(async () => {
+      const age = personalInfo.age ? Number(personalInfo.age) : youthProfile.age;
+      if (age !== null && (!Number.isInteger(age) || age < 15 || age > 80)) {
+        throw new Error('나이는 15세부터 80세 사이로 입력해 주세요.');
+      }
+      if (Number(fundsText) > 2_147_483_647 || Number(loanText) > 2_147_483_647) {
+        throw new Error('금액이 너무 커요. 입력한 금액을 다시 확인해 주세요.');
+      }
+      await api.saveYouthProfile({
+        age, experience: youthProfile.experience, experienceDetail: youthProfile.experienceDetail,
+        fundsReady: Number(fundsText),
+        loanPlanned: youthProfile.loanPlanned,
+        loanAmount: youthProfile.loanPlanned ? Number(loanText) : 0,
+        preferredCategories: youthProfile.preferredCategories,
+        preferredDistricts: youthProfile.preferredDistricts,
+        earlyMorningOk: youthProfile.earlyMorningOk,
+        intro: youthProfile.intro,
+      });
+      await refreshMe();
+      if (isOnboarding) completeOnboarding('successor');
+      navigate(returnTo, { replace: isOnboarding, state: { notice: '매칭 조건을 저장했어요.' } });
+    });
   };
 
   return (
@@ -71,13 +116,17 @@ export default function YouthRegistrationPage() {
       progress={isOnboarding ? { current: 2, total: 2 } : undefined}
       className="youth-registration-page"
       footer={
-        <button
-          type="submit"
-          form="youth-registration-form"
-          className="btn btn-primary block"
-        >
-          {isOnboarding ? '시작하기' : '저장하기'}
-        </button>
+        <>
+          {error && <p className="flow-error" role="alert">{error}</p>}
+          <button
+            type="submit"
+            form="youth-registration-form"
+            className="btn btn-primary block"
+            disabled={busy}
+          >
+            {busy ? '저장하고 있어요' : isOnboarding ? '시작하기' : '저장하기'}
+          </button>
+        </>
       }
     >
       <h1 className="flow-title">
@@ -95,7 +144,7 @@ export default function YouthRegistrationPage() {
         <fieldset className="registration-fieldset">
           <legend className="flow-label">음식점 경력 (단일 선택)</legend>
           <div className="registration-chip-list">
-            {EXPERIENCES.map((experience) => (
+            {EXPERIENCES.map(({ value: experience, label }) => (
               <label
                 key={experience}
                 className={`flow-chip registration-choice${youthProfile.experience === experience ? " is-selected" : ""}`}
@@ -111,7 +160,7 @@ export default function YouthRegistrationPage() {
                     setYouthProfile({ ...youthProfile, experience })
                   }
                 />
-                {experience}
+                {label}
               </label>
             ))}
           </div>
@@ -128,20 +177,15 @@ export default function YouthRegistrationPage() {
               type="text"
               inputMode="numeric"
               autoComplete="off"
-              value={formatFunds(youthProfile.funds)}
+              value={formatFunds(fundsText)}
               placeholder="0"
               pattern="[0-9,]+"
-              maxLength={15}
+              maxLength={13}
               required
               aria-describedby="youth-funds-unit"
               onChange={(event) => {
                 const funds = event.target.value.replace(/,/g, "");
-                if (/^\d*$/.test(funds)) {
-                  setYouthProfile({
-                    ...youthProfile,
-                    funds: funds.replace(/^0+(?=\d)/, ""),
-                  });
-                }
+                if (/^\d*$/.test(funds)) setYouthDraftText({ ...youthDraftText, funds: funds.replace(/^0+(?=\d)/, "") });
               }}
             />
             <span id="youth-funds-unit" className="registration-money-unit">
@@ -155,18 +199,71 @@ export default function YouthRegistrationPage() {
           <div className="registration-chip-list">
             {LOAN_PLANS.map(({ value, label }) => (
               <label
-                key={value}
-                className={`flow-chip registration-choice registration-loan-choice${youthProfile.loanPlan === value ? " is-selected" : ""}`}
+                key={label}
+                className={`flow-chip registration-choice registration-loan-choice${youthProfile.loanPlanned === value ? " is-selected" : ""}`}
               >
                 <input
                   type="radio"
                   className="registration-choice-input"
                   name="loan-plan"
-                  value={value}
-                  checked={youthProfile.loanPlan === value}
+                  value={label}
+                  checked={youthProfile.loanPlanned === value}
                   required
                   onChange={() =>
-                    setYouthProfile({ ...youthProfile, loanPlan: value })
+                    setYouthProfile({ ...youthProfile, loanPlanned: value })
+                  }
+                />
+                {label}
+              </label>
+            ))}
+          </div>
+          {youthProfile.loanPlanned && (
+            <div className="registration-field registration-loan-amount">
+              <label className="flow-label" htmlFor="youth-loan-amount">
+                대출 예정 금액 (선택)
+              </label>
+              <div className="registration-money-control">
+                <input
+                  id="youth-loan-amount"
+                  className="flow-input registration-money-input"
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="off"
+                  value={formatFunds(loanText)}
+                  placeholder="0"
+                  pattern="[0-9,]*"
+                  maxLength={13}
+                  aria-describedby="youth-loan-unit"
+                  onChange={(event) => {
+                    const amount = event.target.value.replace(/,/g, "");
+                    if (/^\d*$/.test(amount)) setYouthDraftText({ ...youthDraftText, loan: amount.replace(/^0+(?=\d)/, "") });
+                  }}
+                />
+                <span id="youth-loan-unit" className="registration-money-unit">
+                  만 원
+                </span>
+              </div>
+            </div>
+          )}
+        </fieldset>
+
+        <fieldset className="registration-fieldset">
+          <legend className="flow-label">새벽 근무 (단일 선택)</legend>
+          <div className="registration-chip-list">
+            {EARLY_MORNING.map(({ value, label }) => (
+              <label
+                key={label}
+                className={`flow-chip registration-choice${youthProfile.earlyMorningOk === value ? " is-selected" : ""}`}
+              >
+                <input
+                  type="radio"
+                  className="registration-choice-input"
+                  name="early-morning"
+                  value={label}
+                  checked={youthProfile.earlyMorningOk === value}
+                  required
+                  onChange={() =>
+                    setYouthProfile({ ...youthProfile, earlyMorningOk: value })
                   }
                 />
                 {label}
@@ -189,7 +286,7 @@ export default function YouthRegistrationPage() {
             {INDUSTRIES.map((industry, index) => (
               <label
                 key={industry}
-                className={`flow-chip registration-choice${youthProfile.industries.includes(industry) ? " is-selected" : ""}`}
+                className={`flow-chip registration-choice${youthProfile.preferredCategories.includes(industry) ? " is-selected" : ""}`}
               >
                 <input
                   ref={index === 0 ? industryInput : undefined}
@@ -197,8 +294,8 @@ export default function YouthRegistrationPage() {
                   className="registration-choice-input"
                   name="industry"
                   value={industry}
-                  checked={youthProfile.industries.includes(industry)}
-                  onChange={() => updateSelection("industries", industry)}
+                  checked={youthProfile.preferredCategories.includes(industry)}
+                  onChange={() => updateSelection("preferredCategories", industry)}
                 />
                 {industry}
               </label>
@@ -223,7 +320,7 @@ export default function YouthRegistrationPage() {
             {REGIONS.map((region, index) => (
               <label
                 key={region}
-                className={`flow-chip registration-choice${youthProfile.regions.includes(region) ? " is-selected" : ""}`}
+                className={`flow-chip registration-choice${youthProfile.preferredDistricts.includes(region) ? " is-selected" : ""}`}
               >
                 <input
                   ref={index === 0 ? regionInput : undefined}
@@ -231,8 +328,8 @@ export default function YouthRegistrationPage() {
                   className="registration-choice-input"
                   name="region"
                   value={region}
-                  checked={youthProfile.regions.includes(region)}
-                  onChange={() => updateSelection("regions", region)}
+                  checked={youthProfile.preferredDistricts.includes(region)}
+                  onChange={() => updateSelection("preferredDistricts", region)}
                 />
                 {region}
               </label>

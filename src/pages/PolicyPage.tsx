@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { useDemo } from '../state/DemoContext';
+import { useApp } from '../state/AppContext';
 import './PolicyPage.css';
 
 const DOCUMENTS = [
@@ -21,7 +21,7 @@ const DOCUMENTS = [
     sections: [
       { title: '나를 소개하는 정보', text: '이름과 나이, 선택해서 적은 휴대폰 번호와 이메일을 사용해요. 사장님인지 청년인지 선택한 역할도 화면에 반영해요.' },
       { title: '가게와 희망 조건', text: '사장님은 가게 정보·사진·승계 조건을, 청년은 경력·준비 자금·대출 계획·희망 업종과 지역을 입력할 수 있어요. 서로 맞는 조건을 비교하는 데 사용해요.' },
-      { title: '현재 체험 화면에서는', text: '입력한 정보는 화면을 사용하는 동안만 유지되고, 새로고침하면 초기화돼요. 사진은 미리보기로 확인하며 실제 서버 업로드와 계정 삭제 기능은 아직 연결하지 않았어요.' },
+      { title: '어디에 보관하나요?', text: '가게와 청년 프로필은 서버에 저장해요. 연락처와 이메일, 사장님 나이는 현재 브라우저 탭에 보관해요. 사진은 미리보기로만 사용하며 새로고침하면 사라져요. 계정 삭제 기능은 아직 연결하지 않았어요.' },
     ],
   },
   {
@@ -38,7 +38,8 @@ const DOCUMENTS = [
 
 export default function PolicyPage() {
   const { document: documentName } = useParams<{ document: string }>();
-  const { role, onboardingComplete } = useDemo();
+  const { role: accountRole, pendingRole, onboardingComplete } = useApp();
+  const role = accountRole ?? pendingRole;
   const content = DOCUMENTS.find((item) => item.id === documentName);
   const canReturnToMy = onboardingComplete[role];
 
