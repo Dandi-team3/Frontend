@@ -35,3 +35,28 @@
   text-decoration: underline;
   text-underline-offset: 2px;
 }
+
+.login-error {
+  color: var(--sub);
+  font-size: 14px;
+  line-height: 1.7;
+  text-align: center;
+}
+
+.login-phone:disabled {
+  opacity: 1;
+  color: var(--muted);
+}
+
+.login-unavailable {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.login-dev-link {
+  min-height: 44px;
+  color: var(--sub);
+  font-size: 13px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}

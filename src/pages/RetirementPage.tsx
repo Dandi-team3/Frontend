@@ -1,11 +1,12 @@
 import { useRef, useState, type FormEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import FlowLayout from '../components/FlowLayout';
+import { LoadStatus } from '../components/SuccessionUi';
 import { addMonths, buildSchedule, formatKoreanDate, todayISO } from '../lib/dates';
 import { api } from '../lib/api';
 import { earliestRetirementDate, toShopRequest } from '../lib/shop';
 import { useAction } from '../lib/useApi';
-import { useApp, useShopDraftLoader } from '../state/AppContext';
+import { hasRequiredPersonalInfo, useApp, useShopDraftLoader } from '../state/AppContext';
 import './RegistrationPages.css';
 
 const QUICK_DATES = [
@@ -16,7 +17,10 @@ const QUICK_DATES = [
 
 export default function RetirementPage() {
   const navigate = useNavigate();
-  const { retirementDate, setRetirementDate, shopDraft, refreshMe } = useApp();
+  const [searchParams] = useSearchParams();
+  const isOnboarding = searchParams.get('onboarding') === '1';
+  const suffix = isOnboarding ? '?onboarding=1' : '';
+  const { retirementDate, setRetirementDate, shopDraft, refreshMe, personalInfo, completeOnboarding, shopLoading, shopLoadError, reloadShop } = useApp();
   useShopDraftLoader();
   const [quickDate, setQuickDate] = useState<number | null>(null);
   const { busy, error, run } = useAction();
@@ -27,18 +31,43 @@ export default function RetirementPage() {
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (shopLoading || shopLoadError || busy) return;
+    if (isOnboarding && !hasRequiredPersonalInfo(personalInfo, 'owner')) {
+      navigate('/onboarding/profile', { replace: true });
+      return;
+    }
     if (!retirementDate) return;
     if (!shopDraft.name.trim() || !shopDraft.category || !shopDraft.district.trim() || !shopDraft.askingPrice) {
-      navigate('/owner/shop');
+      navigate(`/owner/shop${suffix}`);
+      return;
+    }
+    const price = Number(shopDraft.askingPrice);
+    const timePattern = /^([01]\d|2[0-3]):[0-5]\d$/;
+    if (!/^\d+$/.test(shopDraft.askingPrice) || !Number.isInteger(price) || price <= 0 || price > 2_147_483_647
+      || !timePattern.test(shopDraft.workStart) || !timePattern.test(shopDraft.workEnd) || shopDraft.workStart === shopDraft.workEnd) {
+      navigate(`/owner/terms${suffix}`);
+      return;
+    }
+    if (shopDraft.openedYear && (!/^\d{4}$/.test(shopDraft.openedYear) || Number(shopDraft.openedYear) < 1900 || Number(shopDraft.openedYear) > 2100)) {
+      navigate(`/owner/shop${suffix}`);
       return;
     }
     void run(async () => {
+      if (retirementDate < earliest) throw new Error(`${formatKoreanDate(earliest)} 이후의 날짜를 골라 주세요.`);
       // 여러 단계에 나눠 입력한 가게 정보를 한 번에 저장한다.
       await api.saveShop(toShopRequest(shopDraft, retirementDate));
       await refreshMe();
-      navigate('/owner/matches');
+      if (isOnboarding) completeOnboarding('owner');
+      navigate(isOnboarding ? '/home' : '/my', { replace: isOnboarding, state: { notice: '가게 정보를 저장했어요.' } });
     });
   };
+
+  if (shopLoading || shopLoadError) {
+    return <FlowLayout title="가게 등록" backTo={`/owner/terms${suffix}`} progress={{ current: isOnboarding ? 4 : 3, total: isOnboarding ? 4 : 3 }} className="retirement-page">
+      <h1 className="flow-title">가게 정보를<br />불러올게요</h1>
+      <LoadStatus error={shopLoadError} onRetry={() => void reloadShop()} />
+    </FlowLayout>;
+  }
 
   const openDatePicker = () => {
     const input = dateInput.current;
@@ -55,14 +84,14 @@ export default function RetirementPage() {
   return (
     <FlowLayout
       title="가게 등록"
-      backTo="/owner/terms"
-      progress={{ current: 3, total: 3 }}
+      backTo={`/owner/terms${suffix}`}
+      progress={{ current: isOnboarding ? 4 : 3, total: isOnboarding ? 4 : 3 }}
       className="retirement-page"
       footer={(
         <>
           {error && <p className="flow-error" role="alert">{error}</p>}
           <button type="submit" form="retirement-form" className="btn btn-primary block" disabled={busy || !retirementDate}>
-            다음
+            {busy ? '저장하고 있어요' : isOnboarding ? '시작하기' : '저장하기'}
           </button>
         </>
       )}
@@ -93,7 +122,7 @@ export default function RetirementPage() {
               className="retirement-date-input"
               type="date"
               value={retirementDate ?? ''}
-              min={today}
+              min={earliest}
               required
               aria-describedby="retirement-calculation"
               onClick={openDatePicker}
@@ -108,7 +137,13 @@ export default function RetirementPage() {
         <div className="registration-field">
           <p className="flow-label" id="retirement-quick-label">빠르게 고르기</p>
           <div className="registration-chip-list" role="group" aria-labelledby="retirement-quick-label">
-            {QUICK_DATES.map(({ label, months }) => (
+            <button
+              type="button"
+              className={`flow-chip${retirementDate === earliest ? ' is-selected' : ''}`}
+              aria-pressed={retirementDate === earliest}
+              onClick={() => { setQuickDate(null); setRetirementDate(earliest); }}
+            >가장 빠른 날짜</button>
+            {QUICK_DATES.filter(({ months }) => addMonths(today, months) >= earliest).map(({ label, months }) => (
               <button
                 key={months}
                 type="button"
@@ -129,8 +164,8 @@ export default function RetirementPage() {
           {!retirementDate || !planDue
             ? '은퇴 희망일을 정해야 가게를 저장하고 맞는 청년을 찾을 수 있어요.'
             : retirementDate < earliest
-              ? `[계산 안내] 수습 ${shopDraft.apprenticeMonths}개월과 준비 기간을 확보하려면 ${formatKoreanDate(earliest)} 이후로 골라 주세요.`
-              : `[계산 안내] 수습 ${shopDraft.apprenticeMonths}개월을 넣으면 ${formatKoreanDate(planDue)}까지 청년과 승계 계획을 정하는 일정이에요.`}
+              ? `함께 배우는 ${shopDraft.apprenticeMonths}개월과 준비 기간을 확보하려면 ${formatKoreanDate(earliest)} 이후로 골라 주세요.`
+              : `함께 배우는 ${shopDraft.apprenticeMonths}개월을 넣으면 ${formatKoreanDate(planDue)}까지 청년과 승계 계획을 정하는 일정이에요.`}
         </p>
       </form>
     </FlowLayout>

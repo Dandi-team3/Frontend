@@ -1,0 +1,389 @@
+.my-page {
+  padding: 24px 20px 32px;
+  font-size: 16px;
+}
+
+.my-page-heading {
+  margin-bottom: 24px;
+}
+
+.my-page-role {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgb(255 255 255 / 80%);
+  color: var(--navy);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.my-page-heading h1 {
+  color: var(--text);
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1.45;
+  letter-spacing: -0.02em;
+  overflow-wrap: anywhere;
+}
+
+.my-page-heading p {
+  margin-top: 8px;
+  color: var(--sub);
+  font-size: 16px;
+  line-height: 1.7;
+}
+
+.my-page-profile {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 108px;
+  padding: 20px 16px;
+  border: 1px solid rgb(74 179 239 / 22%);
+  border-radius: 20px;
+  background: linear-gradient(115deg, var(--sky-50), #f5fbff);
+}
+
+.my-page-avatar {
+  display: inline-flex;
+  flex: 0 0 52px;
+  align-items: center;
+  justify-content: center;
+  height: 52px;
+  border: 3px solid var(--surface);
+  border-radius: 50%;
+  background: var(--navy);
+  color: var(--surface);
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.my-page-profile-copy {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.my-page-profile-copy > strong {
+  color: var(--navy);
+  font-size: 20px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.my-page-profile-copy > span {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  color: var(--sub);
+  font-size: 14px;
+}
+
+.my-page-profile-edit {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 2px;
+  color: var(--navy);
+  font-size: 14px;
+}
+
+.my-page-profile-edit .my-page-arrow {
+  width: 16px;
+  height: 16px;
+}
+
+.my-page-readiness {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 12px;
+  padding: 0 4px;
+  color: var(--sub);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.my-page-readiness.is-ready {
+  color: var(--navy);
+}
+
+.my-page-readiness > span {
+  font-size: 20px;
+}
+
+.my-page-section {
+  margin-top: 30px;
+}
+
+.my-page-section > h2 {
+  margin-bottom: 12px;
+  color: var(--sub);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.my-page-notice {
+  margin-bottom: 20px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: var(--green-50);
+  color: var(--green);
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+.my-page-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  list-style: none;
+}
+
+.my-page-menu-link {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 88px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.my-page-menu-link:hover {
+  border-color: var(--sky-dark);
+  background: var(--sky-50);
+}
+
+.my-page-menu-icon {
+  display: inline-flex;
+  flex: 0 0 42px;
+  align-items: center;
+  justify-content: center;
+  height: 42px;
+  border-radius: 12px;
+  background: var(--sky-50);
+  color: var(--navy);
+}
+
+.my-page-menu-copy {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.my-page-menu-copy strong,
+.my-page-progress-link strong {
+  color: var(--navy);
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.my-page-menu-copy > span {
+  color: var(--sub);
+  font-size: 14px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.my-page-arrow {
+  flex-shrink: 0;
+  color: var(--navy);
+}
+
+.my-page-progress-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 100px;
+  margin-top: 24px;
+  padding: 20px 16px;
+  border: 1.5px solid var(--sky);
+  border-radius: var(--radius);
+  background: var(--sky-50);
+}
+
+.my-page-progress-link > span:nth-child(2) {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.my-page-progress-link > span:nth-child(2) > span {
+  color: var(--sub);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.my-page-progress-check {
+  display: inline-flex;
+  flex: 0 0 32px;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--navy);
+  color: var(--surface);
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.my-page a:focus-visible {
+  outline: 3px solid var(--sky-dark);
+  outline-offset: 4px;
+}
+
+.my-page-service > ul {
+  padding-inline: 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  list-style: none;
+}
+
+.my-page-service li + li {
+  border-top: 1px solid var(--line);
+}
+
+.my-page-service li a {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 56px;
+  color: var(--sub);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.my-page-service li a:hover {
+  color: var(--navy);
+}
+
+.my-page-service .my-page-arrow {
+  width: 18px;
+  height: 18px;
+  color: var(--muted);
+}
+
+.my-page-owner .my-page-heading h1 {
+  font-size: 30px;
+}
+
+.my-page-owner :is(.my-page-heading p, .my-page-profile-copy > span, .my-page-role, .my-page-profile-edit, .my-page-readiness, .my-page-section > h2, .my-page-menu-copy > span, .my-page-progress-link > span:nth-child(2) > span, .my-page-service li a, .my-page-notice) {
+  font-size: 18px;
+}
+
+.my-page-owner :is(.my-page-profile-copy > strong, .my-page-menu-copy strong, .my-page-progress-link strong) {
+  font-size: 22px;
+}
+
+.my-page-owner .my-page-menu-link {
+  min-height: 108px;
+}
+
+.my-page-owner .my-page-menu-icon {
+  flex-basis: 48px;
+  height: 48px;
+}
+
+.my-page-owner .my-page-service li a {
+  min-height: 64px;
+}
+
+.my-page-account {
+  margin-top: 28px;
+}
+
+.my-page-logout {
+  width: 100%;
+  min-height: 56px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  color: var(--sub);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.my-page-demo {
+  display: block;
+  margin-bottom: 12px;
+  padding: 16px;
+  border: 1px solid var(--navy);
+  border-radius: 14px;
+  color: var(--navy);
+  background: var(--sky-50);
+  text-align: center;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.my-page-demo:focus-visible {
+  outline: 3px solid var(--sky-dark);
+  outline-offset: 4px;
+}
+
+.my-page-logout:hover:not(:disabled) {
+  background: var(--bg);
+}
+
+.my-page-logout:focus-visible {
+  outline: 3px solid var(--sky-dark);
+  outline-offset: 4px;
+}
+
+.my-page-logout:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.my-page-logout-error {
+  margin-bottom: 12px;
+  color: #b42318;
+  font-size: 16px;
+  line-height: 1.7;
+}
+
+.my-page-owner .my-page-logout {
+  min-height: 64px;
+  font-size: 18px;
+}
+
+@media (max-width: 359px) {
+  .my-page-profile {
+    gap: 10px;
+    padding-inline: 12px;
+  }
+
+  .my-page-profile-edit {
+    flex-direction: column;
+  }
+
+  .my-page-menu-link {
+    gap: 10px;
+    padding-inline: 12px;
+  }
+
+  .my-page-menu-icon {
+    flex-basis: 40px;
+    height: 40px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .my-page-menu-link {
+    transition: none;
+  }
+}

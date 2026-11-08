@@ -1,8 +1,9 @@
 import { useRef, useState, type FormEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import AddressSearchDialog from '../components/AddressSearchDialog';
 import FlowLayout from '../components/FlowLayout';
 import ShopPhotoPicker from '../components/ShopPhotoPicker';
+import { LoadStatus } from '../components/SuccessionUi';
 import type { PostcodeResult } from '../lib/postcode';
 import { SHOP_CATEGORIES, type ShopDraft } from '../lib/shop';
 import { useApp, useShopDraftLoader } from '../state/AppContext';
@@ -15,7 +16,10 @@ const REQUIRED_FIELDS = [
 
 export default function OwnerShopPage() {
   const navigate = useNavigate();
-  const { me, shopDraft, setShopDraft, shopPhotos, setShopPhotos } = useApp();
+  const [searchParams] = useSearchParams();
+  const isOnboarding = searchParams.get('onboarding') === '1';
+  const suffix = isOnboarding ? '?onboarding=1' : '';
+  const { me, shopDraft, setShopDraft, shopPhotos, setShopPhotos, shopLoading, shopLoadError, reloadShop } = useApp();
   useShopDraftLoader();
 
   const [searchOpen, setSearchOpen] = useState(false);
@@ -33,6 +37,7 @@ export default function OwnerShopPage() {
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (shopLoading || shopLoadError) return;
     const form = event.currentTarget;
 
     for (const { key, message } of REQUIRED_FIELDS) {
@@ -51,14 +56,21 @@ export default function OwnerShopPage() {
       mainMenu: shopDraft.mainMenu.trim(),
       address: shopDraft.address.trim(),
     });
-    navigate('/owner/terms');
+    navigate(`/owner/terms${suffix}`);
   };
+
+  if (shopLoading || shopLoadError) {
+    return <FlowLayout title="가게 등록" backTo={isOnboarding ? '/onboarding/profile' : '/my'} progress={{ current: isOnboarding ? 2 : 1, total: isOnboarding ? 4 : 3 }} className="owner-shop-page">
+      <h1 className="flow-title">가게 정보를<br />불러올게요</h1>
+      <LoadStatus error={shopLoadError} onRetry={() => void reloadShop()} />
+    </FlowLayout>;
+  }
 
   return (
     <FlowLayout
       title="가게 등록"
-      backTo="/owner"
-      progress={{ current: 1, total: 3 }}
+      backTo={isOnboarding ? '/onboarding/profile' : '/my'}
+      progress={{ current: isOnboarding ? 2 : 1, total: isOnboarding ? 4 : 3 }}
       className="owner-shop-page"
       footer={(
         <button type="submit" form="owner-shop-form" className="btn btn-primary block">
@@ -70,10 +82,10 @@ export default function OwnerShopPage() {
       <p className="flow-desc">가게에 맞는 청년을 찾을 수 있도록 기본 정보를 입력해 주세요.</p>
 
       <form id="owner-shop-form" className="owner-shop-form" onSubmit={handleSubmit}>
-        <div className="owner-shop-field">
+        {!isOnboarding && <div className="owner-shop-field">
           <label className="flow-label" htmlFor="owner-name">사장님 이름</label>
           <input id="owner-name" className="flow-input" type="text" value={me?.name ?? ''} readOnly />
-        </div>
+        </div>}
 
         <div className="owner-shop-field">
           <label className="flow-label" htmlFor="shop-name">가게 이름</label>
@@ -195,6 +207,7 @@ export default function OwnerShopPage() {
         <section className="owner-shop-field owner-shop-photo" aria-labelledby="owner-shop-photo-heading">
           <h2 id="owner-shop-photo-heading" className="flow-label">가게 사진 <span className="owner-shop-optional">선택</span></h2>
           <ShopPhotoPicker files={shopPhotos} onChange={setShopPhotos} editable />
+          <p className="flow-caption">사진은 이 화면에서 미리보기로만 보여요. 새로고침하면 사라져요.</p>
         </section>
       </form>
 

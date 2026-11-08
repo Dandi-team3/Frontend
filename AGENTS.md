@@ -4,4 +4,6 @@
 
 실제 백엔드 DTO·인증·검증·일정 계산 규칙은 [docs/backend-contract.md](docs/backend-contract.md)에 정리되어 있다. 프런트의 `successor`와 서버의 `YOUTH`를 구분한다.
 
+2026-11-08 사용자가 제공한 최신 OpenAPI는 [docs/openapi.json](docs/openapi.json)에 보존했다. 현재 구현 범위·제약·검증은 [docs/integration-status.md](docs/integration-status.md)를 먼저 확인한다. 최신 명세가 이전 기록보다 우선하며, 체크리스트 `Item` 이름 충돌은 구현 문서에 적은 실제 DTO를 따른다.
+
 이 문서는 사용자가 2026-11-05에 기억해 달라고 제공한 자료를 보존한 것이다. 이후 사용자의 지시와 새 API 명세가 있으면 그 내용을 우선한다. 참고 자료만으로 확정할 수 없는 요청·응답 필드나 역할·상태 값은 임의로 확정하지 않는다.

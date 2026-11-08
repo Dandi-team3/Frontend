@@ -1,8 +1,8 @@
 import { useState, type ReactNode } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, Navigate, useNavigate } from 'react-router-dom';
 import Logo from '../components/Logo';
-import { useAction } from '../lib/useApi';
 import { useApp } from '../state/AppContext';
+import { useAction } from '../lib/useApi';
 import './RolePage.css';
 
 type Role = 'owner' | 'successor';
@@ -45,26 +45,28 @@ const ROLES: { id: Role; icon: ReactNode; title: string; desc: string }[] = [
 
 export default function RolePage() {
   const navigate = useNavigate();
-  const { login } = useApp();
-  const [role, setRole] = useState<Role | null>(null);
-  const [name, setName] = useState('');
+  const { setPendingRole, me, chooseRole, isDemoMode, demoNames, login } = useApp();
+  const currentRole = me?.role === 'OWNER' ? 'owner' : me?.role === 'YOUTH' ? 'successor' : null;
+  const [role, setRole] = useState<Role | null>(currentRole);
   const { busy, error, run } = useAction();
+  const locked = !isDemoMode && Boolean(me?.hasShop || me?.hasYouthProfile);
 
   const handleNext = () => {
-    if (!role || !name.trim()) return;
+    if (!role || busy) return;
     void run(async () => {
-      // 카카오 로그인이 서버에 켜지기 전까지는 이름과 역할로 개발용 로그인을 한다.
-      const me = await login(name.trim(), role === 'owner' ? 'OWNER' : 'YOUTH');
-      if (me.successionId) navigate('/succession/home');
-      else if (role === 'owner') navigate(me.hasShop ? '/owner/matches' : '/owner');
-      else navigate(me.hasYouthProfile ? '/offers/current' : '/successor');
+      if (isDemoMode) await login(demoNames[role], role === 'owner' ? 'OWNER' : 'YOUTH');
+      else if (me && currentRole !== role) await chooseRole(role === 'owner' ? 'OWNER' : 'YOUTH');
+      setPendingRole(role);
+      navigate('/onboarding/profile');
     });
   };
+
+  if (!me && !isDemoMode) return <Navigate to="/" replace />;
 
   return (
     <div className="app">
       <main className="screen role">
-        <button type="button" className="back" aria-label="뒤로" onClick={() => navigate('/', { replace: true })}>
+        <button type="button" className="back" aria-label="뒤로" disabled={busy} onClick={() => navigate('/', { replace: true })}>
           <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true">
             <path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
@@ -76,7 +78,8 @@ export default function RolePage() {
           <br />
           오셨나요?
         </h1>
-        <p className="role-desc">물려주는 분인지, 이어받는 분인지 골라 주세요</p>
+        <p className="role-desc">{isDemoMode ? '개발용 확인에서는 두 역할을 번갈아 볼 수 있어요' : locked ? '선택한 역할로 가게와 조건을 확인해 주세요' : '물려주는 분인지, 이어받는 분인지 골라 주세요'}</p>
+        {isDemoMode && <Link className="role-test-link" to="/dev/tools">주요 기능 테스트 열기</Link>}
 
         <div className="role-options" role="radiogroup" aria-label="역할 선택">
           {ROLES.map((r) => (
@@ -86,6 +89,7 @@ export default function RolePage() {
               role="radio"
               aria-checked={role === r.id}
               className={role === r.id ? 'role-card selected' : 'role-card'}
+              disabled={busy || (locked && currentRole !== r.id)}
               onClick={() => setRole(r.id)}
             >
               <span className="role-icon" aria-hidden="true">
@@ -99,16 +103,11 @@ export default function RolePage() {
           ))}
         </div>
 
-        <label className="role-name">
-          <span>이름</span>
-          <input type="text" value={name} maxLength={50} autoComplete="name" placeholder="이름을 입력해 주세요" onChange={(event) => setName(event.target.value)} />
-        </label>
-
         <div className="spacer" />
 
         {error && <p className="role-error" role="alert">{error}</p>}
-        <button type="button" className="btn btn-primary block" disabled={!role || !name.trim() || busy} onClick={handleNext}>
-          다음
+        <button type="button" className="btn btn-primary block" disabled={!role || busy} onClick={handleNext}>
+          {busy ? '확인하고 있어요' : '다음'}
         </button>
       </main>
     </div>

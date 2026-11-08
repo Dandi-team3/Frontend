@@ -1,0 +1,127 @@
+.personal-info-page {
+  padding: 24px 20px 32px;
+  font-size: 16px;
+}
+
+.personal-info-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 48px;
+  margin: -8px 0 20px -8px;
+  padding: 8px;
+  border-radius: 10px;
+  color: var(--navy);
+  font-size: 16px;
+}
+
+.personal-info-back:hover {
+  background: var(--sky-50);
+}
+
+.personal-info-heading h1 {
+  color: var(--text);
+  font-size: 28px;
+  line-height: 1.45;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.personal-info-heading p {
+  margin-top: 12px;
+  color: var(--sub);
+  font-size: 16px;
+  line-height: 1.7;
+}
+
+.personal-info-form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  margin-top: 32px;
+}
+
+.personal-info-field {
+  min-width: 0;
+}
+
+.personal-info-field label {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 12px;
+  color: var(--text);
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.personal-info-field label span {
+  color: var(--sub);
+  font-size: 16px;
+  font-weight: 400;
+}
+
+.personal-info-field input {
+  width: 100%;
+  min-width: 0;
+  min-height: 60px;
+  padding: 16px;
+  border: 1.5px solid var(--muted);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 18px;
+  line-height: 1.5;
+}
+
+.personal-info-field input::placeholder {
+  color: var(--sub);
+  font-size: 16px;
+}
+
+.personal-info-note {
+  padding: 16px;
+  border-radius: 12px;
+  background: var(--sky-50);
+  color: var(--navy);
+  font-size: 16px;
+  line-height: 1.7;
+}
+
+.personal-info-age-control {
+  position: relative;
+}
+
+.personal-info-age-control input {
+  padding-right: 64px;
+}
+
+.personal-info-age-control > span {
+  position: absolute;
+  top: 50%;
+  right: 34px;
+  transform: translateY(-50%);
+  color: var(--sub);
+  font-size: 18px;
+  pointer-events: none;
+}
+
+.personal-info-owner :is(.personal-info-back, .personal-info-heading p, .personal-info-field label span, .personal-info-note),
+.personal-info-owner .personal-info-field input::placeholder {
+  font-size: 18px;
+}
+
+.personal-info-save {
+  min-height: 60px;
+  font-size: 18px;
+}
+
+.personal-info-save:hover {
+  background: var(--navy-dark);
+}
+
+.personal-info-page :is(a, input, button):focus-visible {
+  outline: 3px solid var(--sky-dark);
+  outline-offset: 4px;
+}

@@ -68,6 +68,21 @@
 .flow-chip.is-selected, .flow-chip:has(input:checked) { border-color: var(--navy); background: var(--navy); color: var(--surface); }
 .flow-footer { display: flex; flex-shrink: 0; flex-direction: column; gap: 12px; padding: 16px 20px calc(24px + env(safe-area-inset-bottom)); }
 .flow-footer .btn { flex-shrink: 0; }
+.flow-page.with-main-tabs { padding-bottom: calc(var(--bottom-nav-height, 72px) + env(safe-area-inset-bottom)); }
+.owner-readable .flow-desc, .owner-readable .flow-label { font-size: 17px; }
+.owner-readable .flow-footer .btn { min-height: 60px; font-size: 19px; }
+.owner-readable .flow-chip { min-height: 48px; font-size: 16px; }
+.owner-readable .flow-note { font-size: 16px; }
+.owner-readable .flow-caption { font-size: 14px; }
+.owner-readable .matching-person > span, .owner-readable .matching-profile dl > div, .owner-readable .matching-reasons, .owner-readable .matching-reasons h2 { font-size: 16px; }
+.owner-readable .matching-person strong { font-size: 22px; }
+.owner-readable .matching-disclosure, .owner-readable .matching-score > span { font-size: 15px; }
+.owner-readable .offer-details > div { font-size: 16px; }
+.owner-readable .offer-message-input { font-size: 17px; }
+.owner-readable .offer-card h2 { font-size: 16px; }
+.owner-readable :is(label, legend, textarea, select) { font-size: 17px; }
+.owner-readable p { font-size: 16px; line-height: 1.8; }
+.owner-readable .succ-small-btn { min-height: 44px; font-size: 16px; }
 .flow-page .btn-primary:hover:not(:disabled) { background: var(--navy-dark); }
 .flow-page .btn-outline { border: 1.5px solid var(--navy); background: var(--surface); color: var(--navy); }
 .flow-page .btn-outline:hover:not(:disabled) { background: var(--sky-50); }

@@ -17,40 +17,59 @@ import RoadmapPage from './pages/RoadmapPage';
 import SuccessionHomePage from './pages/SuccessionHomePage';
 import PaymentsPage from './pages/PaymentsPage';
 import { AppProvider, useApp } from './state/AppContext';
+import MainLayout from './components/MainLayout';
+import HomePage from './pages/HomePage';
+import ShopExplorePage from './pages/ShopExplorePage';
+import ShopDetailPage from './pages/ShopDetailPage';
+import MatchingHubPage from './pages/MatchingHubPage';
+import EducationPage from './pages/EducationPage';
+import MyPage from './pages/MyPage';
+import PersonalInfoPage from './pages/PersonalInfoPage';
+import OnboardingProfilePage from './pages/OnboardingProfilePage';
+import PolicyPage from './pages/PolicyPage';
+import OAuthCallbackPage from './pages/OAuthCallbackPage';
+import DevToolsPage from './pages/DevToolsPage';
 
 function RequireLogin({ children }: { children: ReactNode }) {
   const { me } = useApp();
   return me ? children : <Navigate to="/" replace />;
 }
 
-const PROTECTED_ROUTES: { path: string; element: ReactNode }[] = [
-  { path: '/owner', element: <OwnerHomePage /> },
-  { path: '/successor', element: <SuccessorHomePage /> },
-  { path: '/owner/register', element: <RetirementPage /> },
-  { path: '/owner/shop', element: <OwnerShopPage /> },
-  { path: '/owner/terms', element: <OwnerTermsPage /> },
-  { path: '/successor/register', element: <YouthRegistrationPage /> },
-  { path: '/owner/matches', element: <MatchingPage /> },
-  { path: '/offers/current', element: <OfferPage /> },
-  { path: '/succession/home', element: <SuccessionHomePage /> },
-  { path: '/succession/schedule', element: <SchedulePage /> },
-  { path: '/succession/checklist', element: <ChecklistPage /> },
-  { path: '/succession/plan', element: <PlanPage /> },
-  { path: '/succession/roadmap', element: <RoadmapPage /> },
-  { path: '/succession/payments', element: <PaymentsPage /> },
-];
-
 export default function App() {
   return (
     <AppProvider>
-      <Routes>
-        <Route path="/" element={<LoginPage />} />
-        <Route path="/role" element={<RolePage />} />
-        {PROTECTED_ROUTES.map(({ path, element }) => (
-          <Route key={path} path={path} element={<RequireLogin>{element}</RequireLogin>} />
-        ))}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+        <Routes>
+          <Route path="/" element={<LoginPage />} />
+          <Route path="/role" element={<RolePage />} />
+          <Route path="/oauth/callback" element={<OAuthCallbackPage />} />
+          <Route path="/onboarding/profile" element={<OnboardingProfilePage />} />
+          {import.meta.env.DEV && <Route path="/dev/tools" element={<DevToolsPage />} />}
+          <Route element={<MainLayout />}>
+            <Route path="/home" element={<HomePage />} />
+            <Route path="/shops" element={<ShopExplorePage />} />
+            <Route path="/shops/:id" element={<ShopDetailPage />} />
+            <Route path="/matching" element={<MatchingHubPage />} />
+            <Route path="/education" element={<EducationPage />} />
+            <Route path="/my" element={<MyPage />} />
+            <Route path="/my/profile" element={<PersonalInfoPage />} />
+            <Route path="/my/:document" element={<PolicyPage />} />
+          </Route>
+          <Route path="/owner" element={<RequireLogin><OwnerHomePage /></RequireLogin>} />
+          <Route path="/successor" element={<RequireLogin><SuccessorHomePage /></RequireLogin>} />
+          <Route path="/owner/register" element={<RequireLogin><RetirementPage /></RequireLogin>} />
+          <Route path="/owner/shop" element={<RequireLogin><OwnerShopPage /></RequireLogin>} />
+          <Route path="/owner/terms" element={<RequireLogin><OwnerTermsPage /></RequireLogin>} />
+          <Route path="/successor/register" element={<RequireLogin><YouthRegistrationPage /></RequireLogin>} />
+          <Route path="/owner/matches" element={<RequireLogin><MatchingPage /></RequireLogin>} />
+          <Route path="/offers/current" element={<RequireLogin><OfferPage /></RequireLogin>} />
+          <Route path="/succession/home" element={<RequireLogin><SuccessionHomePage /></RequireLogin>} />
+          <Route path="/succession/schedule" element={<RequireLogin><SchedulePage /></RequireLogin>} />
+          <Route path="/succession/checklist" element={<RequireLogin><ChecklistPage /></RequireLogin>} />
+          <Route path="/succession/plan" element={<RequireLogin><PlanPage /></RequireLogin>} />
+          <Route path="/succession/roadmap" element={<RequireLogin><RoadmapPage /></RequireLogin>} />
+          <Route path="/succession/payments" element={<RequireLogin><PaymentsPage /></RequireLogin>} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
     </AppProvider>
   );
 }

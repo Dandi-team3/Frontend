@@ -1,0 +1,77 @@
+.main-layout-header {
+  position: sticky;
+  z-index: 20;
+  top: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 68px;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.main-layout-brand {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  border-radius: 8px;
+}
+
+.main-layout-profile {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 7px 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--navy);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.main-layout-profile:hover {
+  border-color: var(--sky);
+  background: var(--sky-50);
+}
+
+.main-layout-header a:focus-visible {
+  outline: 3px solid var(--sky-dark);
+  outline-offset: 3px;
+}
+
+.main-layout-content {
+  flex: 1;
+  min-width: 0;
+  padding-bottom: calc(var(--bottom-nav-height, 72px) + 24px + env(safe-area-inset-bottom));
+}
+
+.main-layout-content :is(h1, h2, h3, p, dd, strong) { overflow-wrap: anywhere; }
+
+.main-layout.is-owner .main-layout-brand,
+.main-layout.is-owner .main-layout-profile {
+  min-height: 56px;
+}
+
+.main-layout.is-owner .main-layout-profile {
+  padding-inline: 14px;
+  color: var(--navy);
+  font-size: 18px;
+}
+
+.main-layout.is-owner .main-layout-content {
+  font-size: 16px;
+}
+
+.main-layout.is-owner .listed-shop-card :is(h2, h3) {
+  font-size: 22px;
+  line-height: 1.5;
+}
+
+.main-layout.is-owner .listed-shop-card :is(p, dt, dd, li) {
+  font-size: 16px;
+  line-height: 1.7;
+}

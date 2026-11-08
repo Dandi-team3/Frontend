@@ -24,12 +24,12 @@ export default function MatchingPage() {
 
   const handleOffer = (candidate: YouthCandidate) => {
     setSelectedYouth(candidate);
-    navigate('/offers/current');
+    navigate(candidate.offerStatus === 'PROPOSED' && candidate.offerId ? `/offers/current?offer=${candidate.offerId}` : `/offers/current?youth=${candidate.youthId}`);
   };
 
   if (loading || error || !data) {
     return (
-      <FlowLayout title="매칭" backTo="/owner/register" className="matching-page">
+      <FlowLayout title="청년 찾기" backTo="/matching" className="matching-page">
         <LoadStatus error={error} onRetry={() => void reload()} />
       </FlowLayout>
     );
@@ -37,7 +37,7 @@ export default function MatchingPage() {
 
   if (!data.shop) {
     return (
-      <FlowLayout title="매칭" backTo="/owner" className="matching-page">
+      <FlowLayout title="청년 찾기" backTo="/matching" className="matching-page">
         <h1 className="flow-title">먼저 가게를<br />등록해 주세요</h1>
         <p className="flow-desc">가게 정보를 저장하면 맞는 청년을 찾아 드려요.</p>
         <Link to="/owner/shop" className="btn btn-primary block succ-empty-action">가게 등록하기</Link>
@@ -49,13 +49,13 @@ export default function MatchingPage() {
   const expanded = expandedIds ?? (candidates[0] ? [candidates[0].youthId] : []);
 
   return (
-    <FlowLayout title="매칭" backTo="/owner/register" className="matching-page">
+    <FlowLayout title="청년 찾기" backTo="/matching" className="matching-page">
       <h1 className="flow-title">
         {data.shop.name}에 맞는
         <br />
         {candidates.length ? `청년 ${candidates.length}명을 찾았어요` : '청년을 아직 찾지 못했어요'}
       </h1>
-      <p className="flow-desc">{candidates.length ? '마음에 드는 청년에게 승계를 제안해 보세요' : '조건에 맞는 청년이 등록하면 여기에 나타나요'}</p>
+      <p className="flow-desc">{candidates.length ? '청년의 이야기를 보고 가게를 물려줄 분을 찾아보세요.' : '잘 맞는 청년이 등록하면 여기에 나타나요.'}</p>
       {hasActiveSuccession && (
         <p className="flow-note matching-active-note" role="status">
           진행 중인 승계가 있어요.{' '}
@@ -93,7 +93,7 @@ export default function MatchingPage() {
                     <span>{candidate.age ? `${candidate.age}세 · ` : ''}{career}</span>
                   </span>
                   <span className="matching-score">
-                    <span>적합도</span>
+                    <span>잘 맞는 정도</span>
                     <strong>{candidate.score}<span>점</span></strong>
                   </span>
                 </span>
@@ -169,7 +169,7 @@ export default function MatchingPage() {
                   disabled={hasActiveSuccession}
                   onClick={() => handleOffer(candidate)}
                 >
-                  {hasActiveSuccession ? '승계 진행 중' : isOffered ? '보낸 제안 보기' : '승계 제안하기'}
+                  {hasActiveSuccession ? '함께 진행 중이에요' : isOffered ? '보낸 제안 보기' : '이 청년에게 제안하기'}
                 </button>
               )}
             </article>

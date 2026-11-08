@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import FlowDialog from '../components/FlowDialog';
 import FlowLayout from '../components/FlowLayout';
-import { ActionError, LoadStatus, ProgressBar, Tag, TestRoleSwitch } from '../components/SuccessionUi';
+import { ActionError, LoadStatus, ProgressBar, Tag } from '../components/SuccessionUi';
 import { api, orNull } from '../lib/api';
 import { formatKoreanDate, todayISO } from '../lib/dates';
 import { formatWon } from '../lib/shop';
@@ -12,7 +12,8 @@ import { useApp } from '../state/AppContext';
 const DUE_NOTES: Record<number, string> = { 3: ' · 수습 마칠 때', 4: ' · 승계 완료' };
 
 export default function PaymentsPage() {
-  const { me } = useApp();
+  const { me, role, refreshMe } = useApp();
+  const pageTitle = role === 'owner' ? '받은 돈 확인' : '납입 관리';
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [installmentId, setInstallmentId] = useState(0);
   const [paidDate, setPaidDate] = useState(todayISO);
@@ -25,7 +26,7 @@ export default function PaymentsPage() {
 
   if (loading || error || !data) {
     return (
-      <FlowLayout title="납입 관리" backTo="/succession/home" className="payments-page">
+      <FlowLayout title={pageTitle} backTo="/education" className="payments-page">
         <LoadStatus error={error} onRetry={() => void reload()} />
       </FlowLayout>
     );
@@ -34,7 +35,7 @@ export default function PaymentsPage() {
   const { summary, payments } = data;
   if (!summary || !payments) {
     return (
-      <FlowLayout title="납입 관리" backTo={summary ? '/succession/home' : '/succession/schedule'} className="payments-page">
+      <FlowLayout title={pageTitle} backTo="/education" className="payments-page">
         <h1 className="flow-title">계획에 동의하면<br />만들어져요</h1>
         <p className="flow-desc">두 분이 승계 계획에 동의하면 납입 일정이 만들어져요.</p>
         <Link to="/succession/plan" className="btn btn-primary block succ-empty-action">AI 승계 계획 보기</Link>
@@ -58,6 +59,7 @@ export default function PaymentsPage() {
     void run(async () => {
       await api.reportPayment(summary.id, installmentId, paidDate, memo.trim() || null);
       setIsFormOpen(false);
+      await refreshMe();
       await reload();
     });
   };
@@ -67,7 +69,8 @@ export default function PaymentsPage() {
     : <Link to="/succession/home" className="btn btn-primary block">승계 홈으로</Link>;
 
   return (
-    <FlowLayout title="납입 관리" backTo="/succession/home" footer={footer} className="payments-page">
+    <FlowLayout title={pageTitle} backTo="/education" backDisabled={busy} footer={footer} className="payments-page">
+      <button type="button" className="succ-small-btn" disabled={busy} onClick={() => void reload()}>최신 납입 내용 확인</button>
       <section className="succ-card is-tinted pay-remaining" aria-label="남은 금액">
         <span className="pay-label">남은 금액</span>
         <strong>{formatWon(payments.remainingAmount)}</strong>
@@ -92,7 +95,7 @@ export default function PaymentsPage() {
                   </div>
                 </div>
                 {isOwner && item.status === 'REPORTED' && (
-                  <button type="button" className="succ-small-btn is-primary pay-confirm" disabled={busy} aria-label={`${item.label} 받았어요`} onClick={() => void run(async () => { await api.confirmPayment(summary.id, item.id); await reload(); })}>받았어요</button>
+                  <button type="button" className="succ-small-btn is-primary pay-confirm" disabled={busy} aria-label={`${item.label} 받았어요`} onClick={() => void run(async () => { await api.confirmPayment(summary.id, item.id); await refreshMe(); await reload(); })}>받았어요</button>
                 )}
               </div>
             ))}
@@ -119,7 +122,6 @@ export default function PaymentsPage() {
 
       <ActionError message={actionError} />
       <p className="flow-note succ-note">{payments.notice}</p>
-      <TestRoleSwitch summary={summary} />
 
       <FlowDialog open={isFormOpen} title="납입 기록 추가" onClose={() => setIsFormOpen(false)}>
         <form className="pay-form" onSubmit={handleReport}>
