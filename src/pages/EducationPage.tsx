@@ -44,7 +44,8 @@ export default function EducationPage() {
   }
 
   const summary = data.summary;
-  const offers = [...data.offers].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  const offers = [...data.offers].sort((a, b) => Number(b.status === 'PROPOSED') - Number(a.status === 'PROPOSED') || b.createdAt.localeCompare(a.createdAt));
+  const pendingCount = offers.filter((offer) => offer.status === 'PROPOSED').length;
   const currentIndex = summary ? STEPS.findIndex((step) => step.code === summary.status) : -1;
   const isCompleted = summary?.status === 'COMPLETED';
   const progress = summary ? Math.round(Math.min(100, Math.max(0, summary.progressPercent))) : 0;
@@ -53,7 +54,9 @@ export default function EducationPage() {
   return (
     <div className="feature-page education-page">
       <p className="feature-eyebrow">{isOwner ? '진행 상황' : '승계교육'}</p>
-      <h1>{isOwner ? (summary ? <>지금 할 일을<br />확인해 보세요</> : <>보낸 제안을<br />확인해 보세요</>) : summary ? <>함께 이어가는<br />가게의 다음 이야기</> : <>함께 시작할 준비,<br />차근차근 해봐요</>}</h1>
+      <h1>{isOwner ? (summary ? <>지금 할 일을<br />확인해 보세요</> : <>보낸 제안을<br />확인해 보세요</>) : summary ? <>함께 이어가는<br />가게의 다음 이야기</> : pendingCount ? <>사장님의 제안이<br />{pendingCount}건 도착했어요</> : <>받은 제안과<br />승계 과정을 확인해요</>}</h1>
+      {!isOwner && <p className="feature-intro">{me?.name} 님의 제안과 진행 상황이에요.</p>}
+      <button type="button" className="succ-small-btn" onClick={() => void reload()}>최신 진행 상황 확인</button>
 
       {summary && (
         <>

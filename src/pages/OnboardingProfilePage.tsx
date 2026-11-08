@@ -1,30 +1,25 @@
 import { useRef, useState, type FormEvent } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import FlowLayout from '../components/FlowLayout';
-import { hasRequiredPersonalInfo, useApp } from '../state/AppContext';
+import { useApp } from '../state/AppContext';
 import { useAction } from '../lib/useApi';
-import { api } from '../lib/api';
 import './OnboardingProfilePage.css';
 
 export default function OnboardingProfilePage() {
   const navigate = useNavigate();
-  const { me, pendingRole, personalInfo, setPersonalInfo, onboardingComplete, login, completeOnboarding } = useApp();
+  const { me, pendingRole, personalInfo, setPersonalInfo, login, chooseRole, isDemoMode } = useApp();
   const isOwner = pendingRole === 'owner';
   const maxAge = isOwner ? 100 : 80;
   const [values, setValues] = useState(personalInfo);
   const { busy, error, run } = useAction();
   const nameInput = useRef<HTMLInputElement>(null);
   const ageInput = useRef<HTMLInputElement>(null);
-  const submitted = useRef(false);
   const [nameError, setNameError] = useState('');
   const [ageError, setAgeError] = useState('');
 
-  const currentRole = me?.role === 'OWNER' ? 'owner' : me?.role === 'YOUTH' ? 'successor' : null;
-  if (!submitted.current && !busy && !error && currentRole === pendingRole && onboardingComplete[pendingRole] && hasRequiredPersonalInfo(personalInfo, pendingRole)) return <Navigate to="/my/profile" replace />;
-
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const name = values.name.trim();
+    const name = isDemoMode ? values.name.trim() : me?.name ?? '';
     const age = values.age.trim();
     const ageNumber = Number(age);
 
@@ -43,42 +38,28 @@ export default function OnboardingProfilePage() {
       return;
     }
 
-    // 계정 복원으로 상태가 바뀌어도 제출 결과의 이동 경로를 유지한다.
-    submitted.current = true;
     void run(async () => {
       const serverRole = isOwner ? 'OWNER' : 'YOUTH';
-      const next = me?.name === name && me.role === serverRole ? me : await login(name, serverRole);
+      let next = me;
+      if (isDemoMode && (!next || next.role !== serverRole || next.name !== name)) next = await login(name, serverRole);
+      if (!next) throw new Error('로그인 후 다시 시작해 주세요.');
+      if (!isDemoMode && next.role !== serverRole) next = await chooseRole(serverRole);
       if (next.role !== (isOwner ? 'OWNER' : 'YOUTH')) {
         throw new Error('이 이름으로 등록한 역할이 달라요. 역할을 다시 골라 주세요.');
       }
       const info = { ...values, name: next.name, age: String(ageNumber), phone: values.phone.trim(), email: values.email.trim() };
-      const alreadyRegistered = isOwner ? next.hasShop : next.hasYouthProfile;
-      if (alreadyRegistered) {
-        if (!isOwner) {
-          const profile = await api.youthProfile();
-          if (profile.age !== ageNumber) {
-            await api.saveYouthProfile({
-              age: ageNumber, experience: profile.experience, experienceDetail: profile.experienceDetail,
-              fundsReady: profile.fundsReady, loanPlanned: profile.loanPlanned, loanAmount: profile.loanAmount,
-              preferredCategories: profile.preferredCategories, preferredDistricts: profile.preferredDistricts,
-              earlyMorningOk: profile.earlyMorningOk, intro: profile.intro,
-            });
-          }
-        }
-        setPersonalInfo(info);
-        completeOnboarding(pendingRole);
-        navigate('/home', { replace: true });
-      } else {
-        setPersonalInfo(info);
-        navigate(isOwner ? '/owner/shop?onboarding=1' : '/successor/register?onboarding=1');
-      }
+      setPersonalInfo(info);
+      navigate(isOwner ? '/owner/shop?onboarding=1' : '/successor/register?onboarding=1');
     });
   };
+
+  if (!me && !isDemoMode) return <Navigate to="/" replace />;
 
   return (
     <FlowLayout
       title="기본 정보"
       backTo="/role"
+      backDisabled={busy}
       progress={{ current: 1, total: isOwner ? 4 : 2 }}
       className="onboarding-profile-page"
       footer={<>{error && <p className="flow-error" role="alert">{error}</p>}<button type="submit" form="onboarding-profile-form" className="btn btn-primary block" disabled={busy}>{busy ? '확인하고 있어요' : '다음'}</button></>}
@@ -95,12 +76,13 @@ export default function OnboardingProfilePage() {
             className="flow-input"
             type="text"
             autoComplete="name"
-            value={values.name}
+            value={isDemoMode ? values.name : me?.name ?? values.name}
+            readOnly={Boolean(me) && !isDemoMode}
             maxLength={50}
             placeholder={isOwner ? '성함을 적어 주세요' : '이름을 적어 주세요'}
             required
             aria-invalid={Boolean(nameError) || undefined}
-            aria-describedby={nameError ? 'onboarding-name-error' : undefined}
+            aria-describedby={nameError ? 'onboarding-name-error' : me ? 'onboarding-name-source' : undefined}
             onInvalid={() => setNameError('이름을 입력해 주세요.')}
             onChange={(event) => {
               event.currentTarget.setCustomValidity('');
@@ -109,6 +91,7 @@ export default function OnboardingProfilePage() {
             }}
           />
           {nameError && <p id="onboarding-name-error" className="flow-error" role="alert">{nameError}</p>}
+          {me && <p id="onboarding-name-source" className="onboarding-name-source">{isDemoMode ? '시연 계정의 이름이에요. 다른 이름을 적으면 새 개발용 계정으로 들어가요.' : '로그인한 계정의 이름이에요.'}</p>}
         </div>
 
         <div className="onboarding-profile-field">

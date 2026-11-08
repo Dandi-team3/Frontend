@@ -35,6 +35,8 @@
 .plan-section { padding: 16px 0; border-bottom: 1px solid var(--line); }
 .plan-section h2 { font-size: 17px; font-weight: 700; }
 .plan-section p { margin-top: 8px; font-size: 14px; line-height: 1.7; }
+.plan-section-content { white-space: pre-wrap; overflow-wrap: anywhere; }
+.plan-section .plan-edit-history { color: var(--sub); font-size: 12px; }
 .plan-thread { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; list-style: none; }
 .plan-message { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; max-width: 88%; }
 .plan-message.is-mine { align-self: flex-end; align-items: flex-end; }
@@ -57,6 +59,12 @@
 .roadmap-task { padding: 10px 0; border-top: 1px solid var(--line); }
 .roadmap-tasks { margin-top: 10px; list-style: none; }
 .roadmap-task > .succ-row > span:first-child { font-size: 14px; line-height: 1.6; }
+.roadmap-task .succ-row { align-items: flex-start; }
+.roadmap-task-note, .roadmap-feedback { white-space: pre-wrap; overflow-wrap: anywhere; }
+.roadmap-feedback { margin-top: 10px; padding: 10px 12px; }
+.roadmap-dialog-label { margin-top: 18px; }
+.roadmap-completed { margin-top: 12px; }
+.roadmap-completed summary { min-height: 44px; display: flex; align-items: center; color: var(--navy); cursor: pointer; }
 
 /* D5 홈 */
 .home-action .succ-tag { margin-bottom: 8px; }

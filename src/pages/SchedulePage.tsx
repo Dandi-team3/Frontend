@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import FlowDialog from '../components/FlowDialog';
 import FlowLayout from '../components/FlowLayout';
-import { ActionError, LoadStatus, TestRoleSwitch } from '../components/SuccessionUi';
+import { ActionError, LoadStatus } from '../components/SuccessionUi';
 import { api, orNull, type Schedule, type SuccessionStatus } from '../lib/api';
 import { addDays, formatKoreanDate, todayISO } from '../lib/dates';
 import { useAction, useLoad } from '../lib/useApi';
@@ -77,11 +77,13 @@ export default function SchedulePage() {
     <FlowLayout
       title="승계 가일정"
       backTo="/succession/home"
+      backDisabled={busy}
       className="schedule-page"
       footer={<Link to={NEXT_LINK[summary.status].to} className="btn btn-primary block">{NEXT_LINK[summary.status].label}</Link>}
     >
       <h1 className="flow-title">은퇴 희망일에서<br />거꾸로 계산했어요</h1>
       <p className="flow-desc">{summary.shopName} · {summary.ownerName} 사장님 → {summary.youthName} 님</p>
+      <button type="button" className="succ-small-btn" disabled={busy} onClick={() => void reload()}>최신 일정 확인</button>
 
       <div className="schedule-summary">
         <div><span>은퇴 희망일 · 승계 완료</span><strong>{formatKoreanDate(schedule.retireDate)}</strong></div>
@@ -127,7 +129,6 @@ export default function SchedulePage() {
           일정 바꾸자고 요청하기
         </button>
       )}
-      <TestRoleSwitch summary={summary} />
 
       <FlowDialog open={isRequestOpen} title="은퇴 희망일 변경 요청" onClose={() => setIsRequestOpen(false)}>
         <p>원하는 날짜를 골라 주세요. 상대방이 동의한 뒤에 일정이 바뀌어요.</p>

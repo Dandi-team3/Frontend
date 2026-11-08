@@ -6,7 +6,7 @@ import Logo from './Logo';
 import './MainLayout.css';
 
 export default function MainLayout() {
-  const { me, role: accountRole, pendingRole, onboardingComplete, personalInfo } = useApp();
+  const { me, role: accountRole, pendingRole, onboardingComplete, personalInfo, isDemoMode } = useApp();
   const role = accountRole ?? pendingRole;
   const { pathname } = useLocation();
   const roleLabel = role === 'owner' ? '사장님' : '청년';
@@ -16,7 +16,7 @@ export default function MainLayout() {
   }, [pathname]);
 
   const isServiceInfo = ['/my/terms', '/my/privacy', '/my/about'].includes(pathname);
-  if (!me && !isServiceInfo) return <Navigate to="/role" replace />;
+  if (!me && !isServiceInfo) return <Navigate to="/" replace />;
   if ((!onboardingComplete[role] || !hasRequiredPersonalInfo(personalInfo, role)) && !isServiceInfo) {
     return <Navigate to="/onboarding/profile" replace />;
   }
@@ -34,6 +34,7 @@ export default function MainLayout() {
           <span>{roleLabel}</span>
         </Link>
       </header>
+      {isDemoMode && <Link className="dev-test-return" to="/dev/tools">주요 기능 테스트 · 역할 전환</Link>}
       <main className="main-outlet main-layout-content"><Outlet /></main>
       <BottomNav />
     </div>

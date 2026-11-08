@@ -24,7 +24,7 @@ export default function MatchingPage() {
 
   const handleOffer = (candidate: YouthCandidate) => {
     setSelectedYouth(candidate);
-    navigate('/offers/current');
+    navigate(candidate.offerStatus === 'PROPOSED' && candidate.offerId ? `/offers/current?offer=${candidate.offerId}` : `/offers/current?youth=${candidate.youthId}`);
   };
 
   if (loading || error || !data) {

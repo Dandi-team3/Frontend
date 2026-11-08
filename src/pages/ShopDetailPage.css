@@ -253,3 +253,23 @@
     gap: 10px;
   }
 }
+
+.shop-detail-loading-title { margin: 24px 0; font-size: 26px; line-height: 1.5; }
+.shop-detail-info-note, .shop-detail-snapshot-note { margin-top: 14px; color: var(--sub); font-size: 13px; line-height: 1.8; }
+.shop-detail-secondary-link { display: flex; align-items: center; justify-content: center; min-height: 48px; margin-top: 12px; color: var(--navy); font-size: 15px; text-decoration: underline; text-underline-offset: 4px; }
+.shop-detail-fit-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.shop-detail-fit-heading > strong { color: var(--navy); font-size: 30px; line-height: 1.4; }
+.shop-detail-fit-heading > strong span { margin-left: 3px; font-size: 17px; }
+.shop-detail-breakdown { display: flex; flex-direction: column; gap: 14px; margin-top: 20px; }
+.shop-detail-breakdown > div { display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 12px; color: var(--sub); font-size: 14px; line-height: 1.6; }
+.shop-detail-breakdown dd { display: flex; align-items: center; gap: 12px; }
+.shop-detail-breakdown dd > span:last-child { min-width: 48px; text-align: right; }
+.shop-detail-fit-track { flex: 1; height: 8px; overflow: hidden; background: var(--chip); border-radius: 999px; }
+.shop-detail-fit-track > span { display: block; height: 100%; background: var(--sky-dark); border-radius: inherit; }
+.shop-detail-highlights .is-caution { color: var(--orange); }
+.shop-detail-highlights .is-caution > span { color: var(--orange); }
+.shop-detail-offers { margin-top: 14px; list-style: none; }
+.shop-detail-offers li + li { margin-top: 10px; }
+.shop-detail-offers a { display: flex; flex-direction: column; gap: 7px; min-height: 76px; padding: 16px; background: var(--sky-50); color: var(--navy); border-radius: 14px; font-size: 14px; line-height: 1.6; }
+.shop-detail-offers strong { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.shop-detail-page.is-owner .shop-detail-secondary-link, .shop-detail-page.is-owner .shop-detail-info-note { font-size: 17px; }

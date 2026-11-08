@@ -1,7 +1,8 @@
 import { useState, type ReactNode } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, Navigate, useNavigate } from 'react-router-dom';
 import Logo from '../components/Logo';
-import { hasRequiredPersonalInfo, useApp } from '../state/AppContext';
+import { useApp } from '../state/AppContext';
+import { useAction } from '../lib/useApi';
 import './RolePage.css';
 
 type Role = 'owner' | 'successor';
@@ -44,21 +45,28 @@ const ROLES: { id: Role; icon: ReactNode; title: string; desc: string }[] = [
 
 export default function RolePage() {
   const navigate = useNavigate();
-  const { setPendingRole, me, personalInfo, onboardingComplete } = useApp();
-  const [role, setRole] = useState<Role | null>(null);
+  const { setPendingRole, me, chooseRole, isDemoMode, demoNames, login } = useApp();
+  const currentRole = me?.role === 'OWNER' ? 'owner' : me?.role === 'YOUTH' ? 'successor' : null;
+  const [role, setRole] = useState<Role | null>(currentRole);
+  const { busy, error, run } = useAction();
+  const locked = !isDemoMode && Boolean(me?.hasShop || me?.hasYouthProfile);
 
   const handleNext = () => {
-    if (!role) return;
-    setPendingRole(role);
-    const currentRole = me?.role === 'OWNER' ? 'owner' : me?.role === 'YOUTH' ? 'successor' : null;
-    navigate(currentRole === role && onboardingComplete[role] && hasRequiredPersonalInfo(personalInfo, role)
-      ? '/home' : '/onboarding/profile');
+    if (!role || busy) return;
+    void run(async () => {
+      if (isDemoMode) await login(demoNames[role], role === 'owner' ? 'OWNER' : 'YOUTH');
+      else if (me && currentRole !== role) await chooseRole(role === 'owner' ? 'OWNER' : 'YOUTH');
+      setPendingRole(role);
+      navigate('/onboarding/profile');
+    });
   };
+
+  if (!me && !isDemoMode) return <Navigate to="/" replace />;
 
   return (
     <div className="app">
       <main className="screen role">
-        <button type="button" className="back" aria-label="뒤로" onClick={() => navigate('/', { replace: true })}>
+        <button type="button" className="back" aria-label="뒤로" disabled={busy} onClick={() => navigate('/', { replace: true })}>
           <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true">
             <path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
@@ -70,7 +78,8 @@ export default function RolePage() {
           <br />
           오셨나요?
         </h1>
-        <p className="role-desc">물려주는 분인지, 이어받는 분인지 골라 주세요</p>
+        <p className="role-desc">{isDemoMode ? '개발용 확인에서는 두 역할을 번갈아 볼 수 있어요' : locked ? '선택한 역할로 가게와 조건을 확인해 주세요' : '물려주는 분인지, 이어받는 분인지 골라 주세요'}</p>
+        {isDemoMode && <Link className="role-test-link" to="/dev/tools">주요 기능 테스트 열기</Link>}
 
         <div className="role-options" role="radiogroup" aria-label="역할 선택">
           {ROLES.map((r) => (
@@ -80,6 +89,7 @@ export default function RolePage() {
               role="radio"
               aria-checked={role === r.id}
               className={role === r.id ? 'role-card selected' : 'role-card'}
+              disabled={busy || (locked && currentRole !== r.id)}
               onClick={() => setRole(r.id)}
             >
               <span className="role-icon" aria-hidden="true">
@@ -95,8 +105,9 @@ export default function RolePage() {
 
         <div className="spacer" />
 
-        <button type="button" className="btn btn-primary block" disabled={!role} onClick={handleNext}>
-          다음
+        {error && <p className="role-error" role="alert">{error}</p>}
+        <button type="button" className="btn btn-primary block" disabled={!role || busy} onClick={handleNext}>
+          {busy ? '확인하고 있어요' : '다음'}
         </button>
       </main>
     </div>

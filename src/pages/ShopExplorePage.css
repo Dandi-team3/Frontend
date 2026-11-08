@@ -207,3 +207,8 @@
     font-size: 25px;
   }
 }
+
+.shop-explore-data-state { margin-top: 24px; }
+.shop-explore-refresh { min-height: 44px; padding: 8px 10px; color: var(--navy); font-size: 14px; border-radius: 8px; }
+.shop-explore-setup { display: inline-flex; align-items: center; justify-content: center; min-height: 48px; margin-top: 18px; padding: 10px 18px; background: var(--sky-50); color: var(--navy); border-radius: 12px; font-size: 15px; font-weight: 700; }
+.shop-explore-page.is-owner .shop-explore-setup, .shop-explore-page.is-owner .shop-explore-refresh { font-size: 18px; min-height: 56px; }

@@ -13,6 +13,9 @@ export function hasRequiredPersonalInfo(info: PersonalInfo, role?: Role | null) 
 type AppState = {
   me: Me | null;
   role: Role | null;
+  isDemoMode: boolean;
+  beginDemoMode: () => void;
+  demoNames: Record<Role, string>;
   pendingRole: Role;
   setPendingRole: (value: Role) => void;
   personalInfo: PersonalInfo;
@@ -23,8 +26,14 @@ type AppState = {
   setYouthDraft: (value: YouthProfileRequest) => void;
   youthDraftText: { funds: string; loan: string };
   setYouthDraftText: (value: { funds: string; loan: string }) => void;
-  login: (name: string, role: ServerRole) => Promise<Me>;
+  login: (name: string, role: ServerRole, expectedId?: number) => Promise<Me>;
+  signInWithToken: (token: string) => Promise<Me>;
+  chooseRole: (role: ServerRole) => Promise<Me>;
+  logout: () => Promise<void>;
   refreshMe: () => Promise<void>;
+  shopLoading: boolean;
+  shopLoadError: string | null;
+  reloadShop: () => Promise<void>;
   shopDraft: ShopDraft;
   setShopDraft: (value: ShopDraft) => void;
   shopDraftOwnerId: number | null;
@@ -44,6 +53,23 @@ export const EMPTY_YOUTH_PROFILE: YouthProfileRequest = {
   preferredCategories: ['한식'], preferredDistricts: ['중구'], earlyMorningOk: true, intro: null,
 };
 const blankInfo = (): PersonalInfo => ({ name: '', age: '', phone: '', email: '' });
+const DEMO_MODE_KEY = 'mullyeobatgi.demo-mode';
+const DEMO_NAMES_KEY = 'mullyeobatgi.demo-names';
+function readDemoMode() {
+  try { return import.meta.env.DEV && sessionStorage.getItem(DEMO_MODE_KEY) === 'true'; }
+  catch { return false; }
+}
+function readDemoNames(): Record<Role, string> {
+  const defaults = { owner: '김순자', successor: '이도윤' };
+  if (!import.meta.env.DEV) return defaults;
+  try {
+    const saved: unknown = JSON.parse(sessionStorage.getItem(DEMO_NAMES_KEY) ?? 'null');
+    if (!saved || typeof saved !== 'object') return defaults;
+    const fields = saved as Record<string, unknown>;
+    return { owner: typeof fields.owner === 'string' && fields.owner.trim() ? fields.owner : defaults.owner,
+      successor: typeof fields.successor === 'string' && fields.successor.trim() ? fields.successor : defaults.successor };
+  } catch { return defaults; }
+}
 const supplementKey = (id: number) => 'mullyeobatgi.profile.' + id;
 function readSupplement(me: Me): PersonalInfo {
   try {
@@ -62,8 +88,10 @@ const AppContext = createContext<AppState | null>(null);
 export function AppProvider({ children }: { children: ReactNode }) {
   const [me, setMe] = useState<Me | null>(null);
   const meRef = useRef<Me | null>(null);
-  const [ready, setReady] = useState(() => !readToken());
+  const [ready, setReady] = useState(() => !readToken() || window.location.pathname === '/oauth/callback');
   const [pendingRole, setPendingRole] = useState<Role>('successor');
+  const [isDemoMode, setIsDemoMode] = useState(readDemoMode);
+  const [demoNames, setDemoNames] = useState(readDemoNames);
   const [personalInfo, updatePersonalInfo] = useState<PersonalInfo>(blankInfo);
   const personalInfoRef = useRef(personalInfo);
   const [completed, setCompleted] = useState<Record<Role, boolean>>({ owner: false, successor: false });
@@ -71,10 +99,36 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [youthDraftText, setYouthDraftText] = useState({ funds: '', loan: '' });
   const [shopDraft, setShopDraft] = useState<ShopDraft>(() => ({ ...EMPTY_SHOP_DRAFT, handoverItems: [] }));
   const [shopDraftOwnerId, setShopDraftOwnerId] = useState<number | null>(null);
+  const [shopLoading, setShopLoading] = useState(false);
+  const [shopLoadError, setShopLoadError] = useState<string | null>(null);
+  const shopRequestId = useRef(0);
   const [retirementDate, setRetirementDate] = useState<string | null>(null);
   const [shopPhotos, setShopPhotos] = useState<File[]>([]);
   const [offerMessage, setOfferMessage] = useState('');
   const [selectedYouth, setSelectedYouth] = useState<YouthCandidate | null>(null);
+
+  const rememberDemoAccount = useCallback((account: Me) => {
+    if (!import.meta.env.DEV || !account.role) return;
+    const role: Role = account.role === 'OWNER' ? 'owner' : 'successor';
+    setDemoNames((previous) => {
+      const next = { ...previous, [role]: account.name };
+      try { sessionStorage.setItem(DEMO_NAMES_KEY, JSON.stringify(next)); } catch { /* 현재 화면에서만 유지한다. */ }
+      return next;
+    });
+  }, []);
+  const beginDemoMode = useCallback(() => {
+    if (!import.meta.env.DEV) return;
+    setIsDemoMode(true);
+    try { sessionStorage.setItem(DEMO_MODE_KEY, 'true'); } catch { /* 새로고침 전까지 유지한다. */ }
+  }, []);
+  const endDemoMode = useCallback(() => {
+    setIsDemoMode(false);
+    setDemoNames({ owner: '김순자', successor: '이도윤' });
+    try {
+      sessionStorage.removeItem(DEMO_MODE_KEY);
+      sessionStorage.removeItem(DEMO_NAMES_KEY);
+    } catch { /* 저장되지 않은 개발용 설정은 무시한다. */ }
+  }, []);
 
   const setPersonalInfo = useCallback((value: PersonalInfo) => {
     const account = meRef.current;
@@ -97,6 +151,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setYouthDraftText({ funds: '', loan: '' });
       setShopDraft({ ...EMPTY_SHOP_DRAFT, handoverItems: [] });
       setShopDraftOwnerId(null);
+      shopRequestId.current += 1;
+      setShopLoading(false);
+      setShopLoadError(null);
       setRetirementDate(null);
       setShopPhotos([]);
       setOfferMessage('');
@@ -113,7 +170,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     } catch { /* 등록 화면에서 불러오기 오류를 표시한다. */ }
   }, [setPersonalInfo]);
   useEffect(() => {
-    if (!readToken()) return;
+    if (!readToken() || window.location.pathname === '/oauth/callback') return;
     const token = readToken();
     let active = true;
     void api.me().then(async (next) => {
@@ -125,12 +182,52 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }).finally(() => { if (active) setReady(true); });
     return () => { active = false; };
   }, [applyMe, loadSavedAge]);
-  const login = useCallback(async (name: string, role: ServerRole) => {
-    const next = await api.login(name, role);
+  const login = useCallback(async (name: string, role: ServerRole, expectedId?: number) => {
+    if (!import.meta.env.DEV || !isDemoMode) throw new Error('개발용 확인 화면에서 다시 시작해 주세요.');
+    const next = await api.login(name, role, expectedId);
+    applyMe(next);
+    rememberDemoAccount(next);
+    await loadSavedAge(next);
+    return next;
+  }, [applyMe, loadSavedAge, isDemoMode, rememberDemoAccount]);
+  const signInWithToken = useCallback(async (token: string) => {
+    const next = await api.loginWithToken(token);
+    endDemoMode();
     applyMe(next);
     await loadSavedAge(next);
     return next;
-  }, [applyMe, loadSavedAge]);
+  }, [applyMe, loadSavedAge, endDemoMode]);
+  const chooseRole = useCallback(async (role: ServerRole) => {
+    const next = await api.setRole(role);
+    applyMe(next);
+    return next;
+  }, [applyMe]);
+  const logout = useCallback(async () => {
+    await api.logout();
+    endDemoMode();
+    const id = meRef.current?.id;
+    if (id != null) {
+      try { sessionStorage.removeItem(supplementKey(id)); } catch { /* 저장되지 않은 보조 정보는 무시한다. */ }
+    }
+    meRef.current = null;
+    setMe(null);
+    const empty = blankInfo();
+    personalInfoRef.current = empty;
+    updatePersonalInfo(empty);
+    setPendingRole('successor');
+    setCompleted({ owner: false, successor: false });
+    setYouthDraft({ ...EMPTY_YOUTH_PROFILE, preferredCategories: [], preferredDistricts: [] });
+    setYouthDraftText({ funds: '', loan: '' });
+    setShopDraft({ ...EMPTY_SHOP_DRAFT, handoverItems: [] });
+    setShopDraftOwnerId(null);
+    shopRequestId.current += 1;
+    setShopLoading(false);
+    setShopLoadError(null);
+    setRetirementDate(null);
+    setShopPhotos([]);
+    setOfferMessage('');
+    setSelectedYouth(null);
+  }, [endDemoMode]);
   const refreshMe = useCallback(async () => {
     const token = readToken();
     const next = await api.me();
@@ -141,6 +238,27 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setCompleted((previous) => ({ ...previous, [role]: true }));
     return true;
   }, []);
+  const reloadShop = useCallback(async () => {
+    const account = meRef.current;
+    if (!account || account.role !== 'OWNER') return;
+    const id = ++shopRequestId.current;
+    const token = readToken();
+    setShopLoading(true);
+    setShopLoadError(null);
+    try {
+      const shop = account.hasShop ? await api.shop() : null;
+      if (id !== shopRequestId.current || readToken() !== token || meRef.current?.id !== account.id) return;
+      setShopDraft(shop ? fromShopResponse(shop) : { ...EMPTY_SHOP_DRAFT, handoverItems: [] });
+      setRetirementDate(shop?.retireDate ?? null);
+      setShopDraftOwnerId(account.id);
+    } catch (cause) {
+      if (id === shopRequestId.current && readToken() === token && meRef.current?.id === account.id) {
+        setShopLoadError(cause instanceof Error ? cause.message : '가게 정보를 불러오지 못했어요. 다시 시도해 주세요.');
+      }
+    } finally {
+      if (id === shopRequestId.current) setShopLoading(false);
+    }
+  }, []);
   if (!ready) return <div className="app"><p role="status" style={{ padding: 24 }}>내 정보를 불러오고 있어요.</p></div>;
   const role: Role | null = me?.role === 'OWNER' ? 'owner' : me?.role === 'YOUTH' ? 'successor' : null;
   const basicReady = hasRequiredPersonalInfo(personalInfo, role);
@@ -149,9 +267,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     successor: Boolean(basicReady && me?.role === 'YOUTH' && (completed.successor || me.hasYouthProfile)),
   };
   const value: AppState = {
-    me, role, pendingRole, setPendingRole, personalInfo, setPersonalInfo, onboardingComplete, completeOnboarding,
+    me, role, isDemoMode, beginDemoMode, demoNames, pendingRole, setPendingRole, personalInfo, setPersonalInfo, onboardingComplete, completeOnboarding,
     youthDraft, setYouthDraft, youthDraftText, setYouthDraftText,
-    login, refreshMe, shopDraft, setShopDraft, shopDraftOwnerId, setShopDraftOwnerId, retirementDate, setRetirementDate,
+    login, signInWithToken, chooseRole, logout, refreshMe, shopLoading, shopLoadError, reloadShop,
+    shopDraft, setShopDraft, shopDraftOwnerId, setShopDraftOwnerId, retirementDate, setRetirementDate,
     shopPhotos, setShopPhotos, offerMessage, setOfferMessage, selectedYouth, setSelectedYouth,
   };
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
@@ -162,18 +281,8 @@ export function useApp() {
   return context;
 }
 export function useShopDraftLoader() {
-  const { me, shopDraftOwnerId, setShopDraftOwnerId, setShopDraft, setRetirementDate } = useApp();
+  const { me, shopDraftOwnerId, shopLoading, shopLoadError, reloadShop } = useApp();
   useEffect(() => {
-    if (!me || me.role !== 'OWNER' || shopDraftOwnerId === me.id) return;
-    const token = readToken();
-    setShopDraftOwnerId(me.id);
-    setShopDraft({ ...EMPTY_SHOP_DRAFT, handoverItems: [] });
-    if (me.hasShop) {
-      void orNull(api.shop()).then((shop) => {
-        if (readToken() !== token || !shop) return;
-        setShopDraft(fromShopResponse(shop));
-        setRetirementDate(shop.retireDate);
-      }).catch(() => { /* 등록 화면에서 다시 입력할 수 있다. */ });
-    }
-  }, [me?.id, me?.role, me?.hasShop, shopDraftOwnerId, setShopDraftOwnerId, setShopDraft, setRetirementDate]);
+    if (me?.role === 'OWNER' && shopDraftOwnerId !== me.id && !shopLoading && !shopLoadError) void reloadShop();
+  }, [me?.id, me?.role, shopDraftOwnerId, shopLoading, shopLoadError, reloadShop]);
 }

@@ -167,3 +167,18 @@ input {
   background: var(--navy);
   color: #fff;
 }
+.dev-test-return {
+  display: block;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--line);
+  background: var(--sky-50);
+  color: var(--navy);
+  font-size: 14px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.dev-test-return:focus-visible {
+  outline: 3px solid var(--sky-dark);
+  outline-offset: -3px;
+}

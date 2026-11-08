@@ -155,3 +155,16 @@
 }
 
 .listed-shop-card.is-owner .listed-shop-status { font-size: 14px; }
+
+.listed-shop-photo-caption {
+  padding: 6px 14px 0;
+  color: var(--sub);
+  font-size: 11px;
+  line-height: 1.5;
+  text-align: right;
+}
+
+.listed-shop-card.is-owner .listed-shop-photo-caption { font-size: 14px; }
+
+.feature-result .listed-shop-tags { flex-direction: row; flex-wrap: wrap; gap: 6px; margin-top: 14px; padding-left: 0; }
+.feature-result .matching-hub-reasons .is-caution { color: var(--orange); }

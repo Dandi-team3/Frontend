@@ -1,6 +1,6 @@
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { api } from '../lib/api';
-import { useLoad } from '../lib/useApi';
+import { useAction, useLoad } from '../lib/useApi';
 import { useApp, useShopDraftLoader } from '../state/AppContext';
 import './MyPage.css';
 
@@ -26,7 +26,9 @@ function MenuArrow() {
 }
 
 export default function MyPage() {
-  const { me, role, personalInfo, shopDraft } = useApp();
+  const { me, role, personalInfo, shopDraft, logout, isDemoMode } = useApp();
+  const navigate = useNavigate();
+  const { busy: loggingOut, error: logoutError, run: runLogout } = useAction();
   useShopDraftLoader();
   const { data: offers, error, loading, reload } = useLoad(api.offers, [me?.id]);
   const offerStatus = me?.successionId ? 'accepted' : offers?.some((offer) => offer.status === 'PROPOSED') ? 'sent' : 'idle';
@@ -36,6 +38,7 @@ export default function MyPage() {
     ? locationState.notice
     : null;
   const isOwner = role === 'owner';
+  const completed = me?.successionStatus === 'COMPLETED';
   const name = me?.name || personalInfo.name.trim();
   const age = personalInfo.age.trim();
   const shopReady = Boolean(me?.hasShop);
@@ -44,10 +47,10 @@ export default function MyPage() {
   const statusLabel = isOwner
     ? (ready ? '가게 정보 입력 완료' : '가게 정보 입력 중')
     : (ready ? '매칭 조건 입력 완료' : '매칭 조건 입력 중');
-  const offerDescription = offerStatus === 'accepted'
+  const offerDescription = completed ? '마친 승계와 기록을 확인해요' : offerStatus === 'accepted'
     ? '수락한 제안과 진행 상황을 봐요'
     : offerStatus === 'sent'
-      ? '청년의 답변을 기다리고 있어요'
+      ? isOwner ? '청년의 답변을 기다리고 있어요' : '새로 받은 제안을 확인해요'
       : isOwner ? '청년에게 보낸 제안을 확인해요' : '사장님이 보낸 제안을 확인해요';
   const items: { to: string; title: string; description: string; icon: MenuIcon }[] = [
     { to: '/my/profile', title: '내 정보', description: '이름과 나이, 연락처를 확인해요', icon: 'person' },
@@ -86,7 +89,7 @@ export default function MyPage() {
       {offerStatus === 'accepted' && (
         <Link to="/education" className="my-page-progress-link">
           <span className="my-page-progress-check" aria-hidden="true">✓</span>
-          <span><strong>진행 중인 승계</strong><span>일정과 지금 할 일을 확인하세요</span></span>
+          <span><strong>{completed ? '마친 승계' : '진행 중인 승계'}</strong><span>{completed ? '함께 마친 과정과 기록을 확인하세요' : '일정과 지금 할 일을 확인하세요'}</span></span>
           <MenuArrow />
         </Link>
       )}
@@ -114,6 +117,23 @@ export default function MyPage() {
           <li><Link to="/my/about"><span>서비스 소개</span><MenuArrow /></Link></li>
         </ul>
       </nav>
+
+      <div className="my-page-account">
+        {isDemoMode && <Link className="my-page-demo" to="/dev/tools">주요 기능 테스트</Link>}
+        {isDemoMode && <Link className="my-page-demo" to="/role">다른 역할로 확인하기</Link>}
+        {logoutError && <p className="my-page-logout-error" role="alert">{logoutError}</p>}
+        <button
+          type="button"
+          className="my-page-logout"
+          disabled={loggingOut}
+          onClick={() => void runLogout(async () => {
+            await logout();
+            navigate('/', { replace: true });
+          })}
+        >
+          {loggingOut ? '로그아웃하고 있어요' : '로그아웃'}
+        </button>
+      </div>
     </div>
   );
 }

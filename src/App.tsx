@@ -27,10 +27,12 @@ import MyPage from './pages/MyPage';
 import PersonalInfoPage from './pages/PersonalInfoPage';
 import OnboardingProfilePage from './pages/OnboardingProfilePage';
 import PolicyPage from './pages/PolicyPage';
+import OAuthCallbackPage from './pages/OAuthCallbackPage';
+import DevToolsPage from './pages/DevToolsPage';
 
 function RequireLogin({ children }: { children: ReactNode }) {
   const { me } = useApp();
-  return me ? children : <Navigate to="/role" replace />;
+  return me ? children : <Navigate to="/" replace />;
 }
 
 export default function App() {
@@ -39,7 +41,9 @@ export default function App() {
         <Routes>
           <Route path="/" element={<LoginPage />} />
           <Route path="/role" element={<RolePage />} />
+          <Route path="/oauth/callback" element={<OAuthCallbackPage />} />
           <Route path="/onboarding/profile" element={<OnboardingProfilePage />} />
+          {import.meta.env.DEV && <Route path="/dev/tools" element={<DevToolsPage />} />}
           <Route element={<MainLayout />}>
             <Route path="/home" element={<HomePage />} />
             <Route path="/shops" element={<ShopExplorePage />} />

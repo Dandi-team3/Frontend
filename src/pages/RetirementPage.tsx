@@ -1,6 +1,7 @@
 import { useRef, useState, type FormEvent } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import FlowLayout from '../components/FlowLayout';
+import { LoadStatus } from '../components/SuccessionUi';
 import { addMonths, buildSchedule, formatKoreanDate, todayISO } from '../lib/dates';
 import { api } from '../lib/api';
 import { earliestRetirementDate, toShopRequest } from '../lib/shop';
@@ -19,7 +20,7 @@ export default function RetirementPage() {
   const [searchParams] = useSearchParams();
   const isOnboarding = searchParams.get('onboarding') === '1';
   const suffix = isOnboarding ? '?onboarding=1' : '';
-  const { retirementDate, setRetirementDate, shopDraft, refreshMe, personalInfo, completeOnboarding } = useApp();
+  const { retirementDate, setRetirementDate, shopDraft, refreshMe, personalInfo, completeOnboarding, shopLoading, shopLoadError, reloadShop } = useApp();
   useShopDraftLoader();
   const [quickDate, setQuickDate] = useState<number | null>(null);
   const { busy, error, run } = useAction();
@@ -30,12 +31,24 @@ export default function RetirementPage() {
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (shopLoading || shopLoadError || busy) return;
     if (isOnboarding && !hasRequiredPersonalInfo(personalInfo, 'owner')) {
       navigate('/onboarding/profile', { replace: true });
       return;
     }
     if (!retirementDate) return;
     if (!shopDraft.name.trim() || !shopDraft.category || !shopDraft.district.trim() || !shopDraft.askingPrice) {
+      navigate(`/owner/shop${suffix}`);
+      return;
+    }
+    const price = Number(shopDraft.askingPrice);
+    const timePattern = /^([01]\d|2[0-3]):[0-5]\d$/;
+    if (!/^\d+$/.test(shopDraft.askingPrice) || !Number.isInteger(price) || price <= 0 || price > 2_147_483_647
+      || !timePattern.test(shopDraft.workStart) || !timePattern.test(shopDraft.workEnd) || shopDraft.workStart === shopDraft.workEnd) {
+      navigate(`/owner/terms${suffix}`);
+      return;
+    }
+    if (shopDraft.openedYear && (!/^\d{4}$/.test(shopDraft.openedYear) || Number(shopDraft.openedYear) < 1900 || Number(shopDraft.openedYear) > 2100)) {
       navigate(`/owner/shop${suffix}`);
       return;
     }
@@ -48,6 +61,13 @@ export default function RetirementPage() {
       navigate(isOnboarding ? '/home' : '/my', { replace: isOnboarding, state: { notice: '가게 정보를 저장했어요.' } });
     });
   };
+
+  if (shopLoading || shopLoadError) {
+    return <FlowLayout title="가게 등록" backTo={`/owner/terms${suffix}`} progress={{ current: isOnboarding ? 4 : 3, total: isOnboarding ? 4 : 3 }} className="retirement-page">
+      <h1 className="flow-title">가게 정보를<br />불러올게요</h1>
+      <LoadStatus error={shopLoadError} onRetry={() => void reloadShop()} />
+    </FlowLayout>;
+  }
 
   const openDatePicker = () => {
     const input = dateInput.current;

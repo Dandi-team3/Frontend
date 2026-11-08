@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import FlowLayout from "../components/FlowLayout";
+import { LoadStatus } from "../components/SuccessionUi";
 import { api, orNull, type Experience } from "../lib/api";
 import { useAction } from "../lib/useApi";
 import { hasRequiredPersonalInfo, useApp } from "../state/AppContext";
-import { getShopById } from "../data/shops";
 import "./RegistrationPages.css";
 
 const EXPERIENCES: { value: Experience; label: string }[] = [
@@ -32,13 +32,17 @@ export default function YouthRegistrationPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const isOnboarding = searchParams.get('onboarding') === '1';
-  const selectedShop = getShopById(searchParams.get('shop') ?? '');
+  const requestedShop = searchParams.get('shop') ?? '';
+  const selectedShop = /^[1-9]\d*$/.test(requestedShop) && Number.isSafeInteger(Number(requestedShop)) ? requestedShop : null;
   const returnTo = isOnboarding ? '/home' : searchParams.get('from') === 'matching'
-    ? `/matching${selectedShop ? `?shop=${encodeURIComponent(selectedShop.id)}` : ''}` : '/my';
+    ? `/matching${selectedShop ? `?shop=${selectedShop}` : ''}` : '/my';
   const { me, refreshMe, personalInfo, completeOnboarding, youthDraft: youthProfile,
     setYouthDraft: setYouthProfile, youthDraftText, setYouthDraftText } = useApp();
   const { funds: fundsText, loan: loanText } = youthDraftText;
   const { busy, error, run } = useAction();
+  const [profileLoading, setProfileLoading] = useState(Boolean(me?.hasYouthProfile));
+  const [profileError, setProfileError] = useState<string | null>(null);
+  const [loadAttempt, setLoadAttempt] = useState(0);
   const [invalidGroup, setInvalidGroup] = useState<
     "industries" | "regions" | null
   >(null);
@@ -47,17 +51,20 @@ export default function YouthRegistrationPage() {
 
   // 이미 등록했으면 불러온다. 화면에 없는 값(나이, 소개 등)도 저장할 때 유지된다.
   useEffect(() => {
-    if (!me?.hasYouthProfile) return;
+    if (!me?.hasYouthProfile) { setProfileLoading(false); return; }
     let cancelled = false;
+    setProfileLoading(true);
+    setProfileError(null);
     void orNull(api.youthProfile()).then((profile) => {
-      if (cancelled || !profile) return;
-      setYouthProfile(profile);
+      if (cancelled) return;
+      if (!profile) throw new Error('저장한 청년 정보를 찾지 못했어요. 다시 불러와 주세요.');
+      setYouthProfile({ ...profile, preferredCategories: profile.preferredCategories ?? [], preferredDistricts: profile.preferredDistricts ?? [] });
       setYouthDraftText({ funds: String(profile.fundsReady), loan: profile.loanAmount ? String(profile.loanAmount) : "" });
-    }).catch(() => {
-      // 불러오지 못하면 새로 입력할 수 있게 둔다.
-    });
+    }).catch((cause: unknown) => {
+      if (!cancelled) setProfileError(cause instanceof Error ? cause.message : '청년 정보를 불러오지 못했어요.');
+    }).finally(() => { if (!cancelled) setProfileLoading(false); });
     return () => { cancelled = true; };
-  }, [me]);
+  }, [me?.id, me?.hasYouthProfile, loadAttempt]);
 
   const updateSelection = (field: "preferredCategories" | "preferredDistricts", value: string) => {
     const current = youthProfile[field];
@@ -70,6 +77,7 @@ export default function YouthRegistrationPage() {
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (profileLoading || profileError || busy) return;
     if (youthProfile.preferredCategories.length === 0) {
       setInvalidGroup("industries");
       industryInput.current?.focus();
@@ -90,7 +98,13 @@ export default function YouthRegistrationPage() {
       if (age !== null && (!Number.isInteger(age) || age < 15 || age > 80)) {
         throw new Error('나이는 15세부터 80세 사이로 입력해 주세요.');
       }
-      if (Number(fundsText) > 2_147_483_647 || Number(loanText) > 2_147_483_647) {
+      if (!/^\d+$/.test(fundsText) || !Number.isInteger(Number(fundsText)) || Number(fundsText) < 0) {
+        throw new Error('준비된 자금을 0 이상으로 적어 주세요.');
+      }
+      if (youthProfile.loanPlanned && loanText && !/^\d+$/.test(loanText)) {
+        throw new Error('대출 예정 금액을 0 이상으로 적어 주세요.');
+      }
+      if (Number(fundsText) > 2_147_483_647 || (youthProfile.loanPlanned && Number(loanText) > 2_147_483_647)) {
         throw new Error('금액이 너무 커요. 입력한 금액을 다시 확인해 주세요.');
       }
       await api.saveYouthProfile({
@@ -108,6 +122,13 @@ export default function YouthRegistrationPage() {
       navigate(returnTo, { replace: isOnboarding, state: { notice: '매칭 조건을 저장했어요.' } });
     });
   };
+
+  if (profileLoading || profileError) {
+    return <FlowLayout title={isOnboarding ? '청년 등록' : '매칭 조건'} backTo={isOnboarding ? '/onboarding/profile' : returnTo} progress={isOnboarding ? { current: 2, total: 2 } : undefined} className="youth-registration-page">
+      <h1 className="flow-title">저장한 조건을<br />불러올게요</h1>
+      <LoadStatus error={profileError} onRetry={() => setLoadAttempt((value) => value + 1)} />
+    </FlowLayout>;
+  }
 
   return (
     <FlowLayout

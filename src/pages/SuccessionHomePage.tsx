@@ -1,9 +1,8 @@
 import { Link } from 'react-router-dom';
 import FlowLayout from '../components/FlowLayout';
-import { ActionError, LoadStatus, ProgressBar, Tag, TestRoleSwitch } from '../components/SuccessionUi';
+import { ActionError, LoadStatus, ProgressBar, Tag } from '../components/SuccessionUi';
 import { api, orNull, type ActionType } from '../lib/api';
 import { formatKoreanDate } from '../lib/dates';
-import { usePlanThreads } from '../lib/planThreads';
 import { formatWon } from '../lib/shop';
 import { useAction, useLoad } from '../lib/useApi';
 import { useApp } from '../state/AppContext';
@@ -26,9 +25,8 @@ export default function SuccessionHomePage() {
   const { data, error, loading, reload } = useLoad(async () => {
     const summary = await orNull(api.currentSuccession());
     return { summary, roadmap: summary?.planAgreedByBoth ? await orNull(api.roadmap(summary.id)) : null };
-  }, [me?.id]);
+  }, [me?.id, me?.successionStatus]);
   const summary = data?.summary ?? null;
-  const { threads } = usePlanThreads(summary?.id ?? null);
 
   if (loading || error || !data) {
     return (
@@ -50,16 +48,12 @@ export default function SuccessionHomePage() {
 
   const isOwner = summary.mySide === 'OWNER';
   const viewer = isOwner ? `${summary.ownerName} 사장님` : `${summary.youthName} 님`;
-  const other = isOwner ? `${summary.youthName} 님` : `${summary.ownerName} 사장님`;
   const currentStage = data.roadmap?.stages.find((stage) => stage.state === 'NOW');
   const beforePlan = '계획에 동의하면 만들어져요';
   const shortDate = (value: string) => formatKoreanDate(value).replace(/^\d+년 /, '');
 
-  // 대화 제안과 사장님 직접 완료는 서버 할 일 목록에 없어 화면에서 더한다.
-  const proposalsToAnswer = summary.planAgreedByBoth ? 0 : Object.values(threads).filter((thread) => thread.some((message) => message.state === 'pending' && message.from !== summary.mySide)).length;
-  const actions = summary.pendingActions.filter((action) => action.type !== 'ROADMAP_APPROVE');
-  const remainingTasks = currentStage ? currentStage.tasks.length - currentStage.approvedCount : 0;
-  const count = actions.length + (proposalsToAnswer ? 1 : 0) + (isOwner && remainingTasks ? 1 : 0);
+  const actions = summary.pendingActions;
+  const count = actions.length;
 
   const menu = [
     { to: '/succession/schedule', title: isOwner ? '함께할 일정' : '승계 가일정', sub: summary.nextStep ? `다음: ${shortDate(summary.nextStep.dueDate)} ${summary.nextStep.title}` : '승계를 마쳤어요' },
@@ -70,8 +64,9 @@ export default function SuccessionHomePage() {
   ];
 
   return (
-    <FlowLayout title={pageTitle} backTo="/education" className="home-page">
+    <FlowLayout title={pageTitle} backTo="/education" backDisabled={busy} className="home-page">
       <h1 className="flow-title">{viewer},<br />{summary.status === 'COMPLETED' ? '승계를 마쳤어요' : count ? `확인할 일이 ${count}개 있어요` : '지금 확인할 일이 없어요'}</h1>
+      <button type="button" className="succ-small-btn" disabled={busy} onClick={() => void reload()}>최신 진행 상황 확인</button>
       <ActionError message={actionError} />
 
       <ul className="succ-cards">
@@ -88,20 +83,6 @@ export default function SuccessionHomePage() {
             </div>
           </li>
         ))}
-        {proposalsToAnswer > 0 && (
-          <li className="succ-card is-active home-action">
-            <Tag kind="outline">조건 제안</Tag>
-            <h2>{other}이 보낸 조건 제안이 {proposalsToAnswer}개 있어요</h2>
-            <div className="succ-actions"><Link to="/succession/plan" className="succ-small-btn is-primary home-action-link">바로 가기</Link></div>
-          </li>
-        )}
-        {isOwner && currentStage && remainingTasks > 0 && (
-          <li className="succ-card is-active home-action">
-            <Tag kind="outline">수습 진행</Tag>
-            <h2>{other}의 수습 {currentStage.seq}단계에서 완료할 일이 {remainingTasks}개 남았어요</h2>
-            <div className="succ-actions"><Link to="/succession/roadmap" className="succ-small-btn is-primary home-action-link">바로 가기</Link></div>
-          </li>
-        )}
 
         <li className="succ-card">
           <div className="succ-row succ-row-top">
@@ -132,7 +113,6 @@ export default function SuccessionHomePage() {
         </li>
       </ul>
 
-      <TestRoleSwitch summary={summary} />
     </FlowLayout>
   );
 }

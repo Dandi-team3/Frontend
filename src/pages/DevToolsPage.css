@@ -1,0 +1,82 @@
+.dev-tools-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--line);
+  font-size: 18px;
+  font-weight: 800;
+}
+.dev-tools-header > a {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  min-height: 40px;
+  margin-left: -8px;
+  font-size: 34px;
+  line-height: 1;
+}
+.dev-tools-badge {
+  margin-left: auto;
+  padding: 5px 9px;
+  border-radius: 8px;
+  background: var(--sky-50);
+  color: var(--navy);
+  font-size: 12px;
+}
+.dev-tools-content { padding: 28px 20px 36px; }
+.dev-tools-intro { margin-bottom: 24px; }
+.dev-tools-eyebrow { margin-bottom: 8px; color: var(--sky-dark); font-size: 14px; font-weight: 800; }
+.dev-tools-intro h1 { font-size: 30px; line-height: 1.4; letter-spacing: -.035em; }
+.dev-tools-intro > p:last-child { margin-top: 14px; color: var(--sub); font-size: 16px; line-height: 1.7; }
+.dev-tools-account, .dev-tools-server { padding: 20px; border: 1px solid var(--line); border-radius: 20px; }
+.dev-tools-account h2, .dev-tools-server h2 { font-size: 18px; line-height: 1.5; }
+.dev-tools-account > p, .dev-tools-server > p { margin-top: 8px; color: var(--sub); font-size: 15px; line-height: 1.7; }
+.dev-tools-account-row { margin-top: 16px; }
+.dev-tools-account-row label { display: block; margin-bottom: 7px; color: var(--sub); font-size: 14px; font-weight: 700; }
+.dev-tools-account-row > div { display: flex; gap: 8px; }
+.dev-tools-account-row input { width: 0; min-width: 0; flex: 1; min-height: 46px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); font-size: 16px; }
+.dev-tools-switch { flex-shrink: 0; padding: 10px 12px; border-radius: 10px; background: var(--navy); color: white; font-size: 14px; font-weight: 700; }
+.dev-tools button:disabled { opacity: .5; cursor: default; }
+.dev-tools input:focus-visible, .dev-tools a:focus-visible, .dev-tools button:focus-visible, .dev-tools summary:focus-visible { outline: 3px solid var(--sky); outline-offset: 3px; }
+.dev-tools-server { margin-top: 16px; background: var(--sky-50); border-color: transparent; }
+.dev-tools-section-heading { display: flex; align-items: center; gap: 10px; justify-content: space-between; }
+.dev-tools-section-heading h2 { flex: 1; font-size: 16px; }
+.dev-tools-section-heading button { flex-shrink: 0; min-height: 42px; color: var(--navy); font-size: 14px; font-weight: 800; }
+.dev-tools-server .dev-tools-connected { color: var(--navy); font-size: 13px; }
+.dev-tools-server h3 { margin-top: 16px; color: var(--navy); font-size: 19px; }
+.dev-tools-prefill { margin-top: 12px; min-height: 42px; padding: 10px 12px; background: white; border: 1px solid var(--sky-dark); border-radius: 10px; color: var(--navy); font-size: 14px; font-weight: 700; }
+.dev-tools .dev-tools-caption { color: var(--sub); font-size: 13px; line-height: 1.7; }
+.dev-tools .dev-tools-error { margin-top: 10px; color: #b42318; font-size: 14px; line-height: 1.6; }
+.dev-tools-features { display: grid; gap: 14px; margin-top: 26px; list-style: none; }
+.dev-tools-feature { padding: 20px; border: 1px solid var(--line); border-radius: 20px; }
+.dev-tools-feature-heading { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 12px; }
+.dev-tools-number { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--bg); color: var(--sub); font-size: 14px; font-weight: 800; }
+.dev-tools-status { color: var(--sub); font-size: 13px; font-weight: 700; }
+.dev-tools-status.is-ready { color: var(--navy); }
+.dev-tools-feature h2 { font-size: 19px; line-height: 1.5; }
+.dev-tools-feature > p { margin-top: 9px; color: var(--sub); font-size: 15px; line-height: 1.7; }
+.dev-tools-links { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; margin-top: 14px; }
+.dev-tools-links a { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; color: var(--navy); font-size: 15px; font-weight: 800; }
+.dev-tools-links .dev-tools-next { color: var(--sub); font-size: 13px; font-weight: 500; text-decoration: underline; text-underline-offset: 4px; }
+.dev-tools-api { margin-top: 24px; padding: 16px; border-radius: 14px; background: var(--bg); font-size: 13px; line-height: 1.8; }
+.dev-tools-api summary { min-height: 30px; cursor: pointer; color: var(--navy); font-weight: 800; }
+.dev-tools-api p { margin-block: 12px; color: var(--sub); }
+.dev-tools-api code { white-space: normal; overflow-wrap: anywhere; font-size: 11px; }
+.dev-tools-api ul { display: grid; gap: 7px; margin-top: 12px; padding-left: 15px; }
+.dev-tools-footer-note { margin-top: 22px; color: var(--muted); font-size: 13px; line-height: 1.8; }
+.dev-tools.is-owner .dev-tools-feature h2 { font-size: 20px; }
+.dev-tools.is-owner .dev-tools-feature > p { font-size: 16px; }
+@media (max-width: 359px) {
+  .dev-tools-content { padding-inline: 16px; }
+  .dev-tools-account, .dev-tools-server, .dev-tools-feature { padding: 16px; }
+  .dev-tools-switch { padding-inline: 9px; font-size: 12px; }
+  .dev-tools-account-row input { padding-inline: 10px; }
+  .dev-tools-feature h2 { font-size: 18px; }
+}
+.dev-tools-delivery { margin-top: 20px; padding: 20px; border: 1px solid var(--sky-dark); border-radius: 20px; background: var(--sky-50); }
+.dev-tools-delivery h2 { font-size: 19px; line-height: 1.5; }
+.dev-tools-delivery p { margin-top: 8px; color: var(--sub); font-size: 14px; line-height: 1.7; }
+.dev-tools-delivery ul { list-style: none; }
+.dev-tools-delivery li { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--line); }
+.dev-tools-delivery .dev-tools-switch { display: block; width: 100%; margin-top: 12px; text-align: center; line-height: 1.6; white-space: normal; }

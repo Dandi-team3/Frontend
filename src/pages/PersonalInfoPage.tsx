@@ -59,7 +59,7 @@ export default function PersonalInfoPage() {
 
       <header className="personal-info-heading">
         <h1>내 정보</h1>
-        <p>{role === 'owner' ? '사장님의 이름과 나이를 알려 주세요.' : '나를 소개하는 기본 정보예요.'}</p>
+        <p>{role === 'owner' ? '사장님의 나이와 연락처를 확인해 주세요.' : '나를 소개하는 기본 정보예요.'}</p>
       </header>
 
       <form className="personal-info-form" onSubmit={handleSubmit}>
@@ -94,6 +94,7 @@ export default function PersonalInfoPage() {
               max={maxAge}
               step={1}
               value={values.age}
+              disabled={busy}
               placeholder="나이를 입력해 주세요"
               required
               onChange={(event) => {
@@ -114,6 +115,7 @@ export default function PersonalInfoPage() {
             autoComplete="tel"
             inputMode="tel"
             value={values.phone}
+            disabled={busy}
             maxLength={30}
             placeholder="휴대폰 번호를 입력해 주세요"
             onChange={(event) => setValues({ ...values, phone: event.currentTarget.value })}
@@ -129,6 +131,7 @@ export default function PersonalInfoPage() {
             autoComplete="email"
             inputMode="email"
             value={values.email}
+            disabled={busy}
             maxLength={254}
             placeholder="이메일을 입력해 주세요"
             onChange={(event) => setValues({ ...values, email: event.currentTarget.value })}

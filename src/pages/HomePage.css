@@ -309,3 +309,22 @@
   .home-owner-intro h1 { font-size: 28px; }
   .home-owner-shop { padding-inline: 16px; }
 }
+
+.home-data-state { margin-top: 18px; }
+.home-empty { margin-top: 18px; padding: 22px 18px; border: 1px solid var(--line); border-radius: var(--radius); }
+.home-empty h3 { font-size: 17px; line-height: 1.6; }
+.home-empty p { margin-top: 8px; color: var(--sub); font-size: 14px; line-height: 1.8; }
+.home-empty-link { display: inline-flex; min-height: 44px; align-items: center; margin-top: 12px; color: var(--navy); font-size: 14px; font-weight: 700; }
+.home-owner-progress h3 { color: var(--navy); font-size: 21px; line-height: 1.5; }
+.home-owner-edit-link { display: flex; align-items: center; justify-content: space-between; min-height: 56px; gap: 12px; margin-top: 24px; padding: 16px 18px; color: var(--navy); border: 1px solid var(--line); border-radius: var(--radius); font-size: 18px; font-weight: 700; }
+.home-inbox { margin-bottom: 24px; padding: 20px; border: 1px solid var(--sky-dark); border-radius: var(--radius-lg); background: var(--surface); }
+.home-inbox-heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.home-inbox-heading h2 { font-size: 20px; line-height: 1.5; }
+.home-inbox-heading button { flex-shrink: 0; min-height: 44px; color: var(--navy); font-size: 13px; font-weight: 700; }
+.home-inbox p { margin-top: 10px; color: var(--sub); font-size: 14px; line-height: 1.7; }
+.home-inbox .home-inbox-viewer { margin-top: 4px; color: var(--muted); font-size: 13px; }
+.home-inbox-progress, .home-inbox-proposal { margin-top: 16px; }
+.home-inbox strong { font-size: 17px; line-height: 1.6; }
+.home-inbox-primary { display: block; margin-top: 14px; padding: 15px; border-radius: 12px; background: var(--navy); color: var(--surface); text-align: center; font-size: 16px; font-weight: 700; line-height: 1.6; }
+.home-inbox-secondary { display: inline-flex; align-items: center; min-height: 44px; margin-top: 8px; color: var(--navy); font-size: 14px; font-weight: 700; line-height: 1.6; }
+.home-inbox :is(a, button):focus-visible { outline: 3px solid var(--sky-dark); outline-offset: 3px; }

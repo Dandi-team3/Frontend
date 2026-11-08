@@ -302,6 +302,65 @@
   min-height: 64px;
 }
 
+.my-page-account {
+  margin-top: 28px;
+}
+
+.my-page-logout {
+  width: 100%;
+  min-height: 56px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  color: var(--sub);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.my-page-demo {
+  display: block;
+  margin-bottom: 12px;
+  padding: 16px;
+  border: 1px solid var(--navy);
+  border-radius: 14px;
+  color: var(--navy);
+  background: var(--sky-50);
+  text-align: center;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.my-page-demo:focus-visible {
+  outline: 3px solid var(--sky-dark);
+  outline-offset: 4px;
+}
+
+.my-page-logout:hover:not(:disabled) {
+  background: var(--bg);
+}
+
+.my-page-logout:focus-visible {
+  outline: 3px solid var(--sky-dark);
+  outline-offset: 4px;
+}
+
+.my-page-logout:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.my-page-logout-error {
+  margin-bottom: 12px;
+  color: #b42318;
+  font-size: 16px;
+  line-height: 1.7;
+}
+
+.my-page-owner .my-page-logout {
+  min-height: 64px;
+  font-size: 18px;
+}
+
 @media (max-width: 359px) {
   .my-page-profile {
     gap: 10px;

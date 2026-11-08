@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import AddressSearchDialog from '../components/AddressSearchDialog';
 import FlowLayout from '../components/FlowLayout';
 import ShopPhotoPicker from '../components/ShopPhotoPicker';
+import { LoadStatus } from '../components/SuccessionUi';
 import type { PostcodeResult } from '../lib/postcode';
 import { SHOP_CATEGORIES, type ShopDraft } from '../lib/shop';
 import { useApp, useShopDraftLoader } from '../state/AppContext';
@@ -18,7 +19,7 @@ export default function OwnerShopPage() {
   const [searchParams] = useSearchParams();
   const isOnboarding = searchParams.get('onboarding') === '1';
   const suffix = isOnboarding ? '?onboarding=1' : '';
-  const { me, shopDraft, setShopDraft, shopPhotos, setShopPhotos } = useApp();
+  const { me, shopDraft, setShopDraft, shopPhotos, setShopPhotos, shopLoading, shopLoadError, reloadShop } = useApp();
   useShopDraftLoader();
 
   const [searchOpen, setSearchOpen] = useState(false);
@@ -36,6 +37,7 @@ export default function OwnerShopPage() {
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (shopLoading || shopLoadError) return;
     const form = event.currentTarget;
 
     for (const { key, message } of REQUIRED_FIELDS) {
@@ -56,6 +58,13 @@ export default function OwnerShopPage() {
     });
     navigate(`/owner/terms${suffix}`);
   };
+
+  if (shopLoading || shopLoadError) {
+    return <FlowLayout title="가게 등록" backTo={isOnboarding ? '/onboarding/profile' : '/my'} progress={{ current: isOnboarding ? 2 : 1, total: isOnboarding ? 4 : 3 }} className="owner-shop-page">
+      <h1 className="flow-title">가게 정보를<br />불러올게요</h1>
+      <LoadStatus error={shopLoadError} onRetry={() => void reloadShop()} />
+    </FlowLayout>;
+  }
 
   return (
     <FlowLayout
@@ -198,6 +207,7 @@ export default function OwnerShopPage() {
         <section className="owner-shop-field owner-shop-photo" aria-labelledby="owner-shop-photo-heading">
           <h2 id="owner-shop-photo-heading" className="flow-label">가게 사진 <span className="owner-shop-optional">선택</span></h2>
           <ShopPhotoPicker files={shopPhotos} onChange={setShopPhotos} editable />
+          <p className="flow-caption">사진은 이 화면에서 미리보기로만 보여요. 새로고침하면 사라져요.</p>
         </section>
       </form>
 
